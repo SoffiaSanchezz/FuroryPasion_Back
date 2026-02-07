@@ -1,0 +1,61 @@
+# # // register
+# POST http://127.0.0.1:5000/register
+# Content-Type: application/json
+
+# {
+#     "nombre": "Paola",
+#     "apellido": "Sanchez",
+#     "username": "Pao Pao",
+#     "email": "Pao@gmail.com",
+#     "password": "Pao123*",
+#     "rol": "admin"
+# }
+
+# // login
+# POST http://127.0.0.1:5000/login
+# Content-Type: application/json
+
+# {
+#     "identifier": "Pao@gmail.com",
+#     "password": "Pao123*"
+# }
+
+# //Studients 
+# http://127.0.0.1:5000/students
+#  Content-Type: multipart/form-data
+#  Authorization: Bearer <tu_token_jwt> "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9eyJzdWIiOiIxIiwiaWF0IjoxNzY5ODQ1NzU2LCJleHAiOjE3Njk4NDc1NTYsInJvbCI6InVzdWFyaW8ifQ.OyBgvmOjf5PScf2NIwQVBd5LoCKgiQ_Y453ICJCCP2w"
+#  {
+#     "first_name": "Juan",
+#     "last_name": "Perez",
+#     "date_of_birth": "2020-01-15",
+#     "is_minor": true,
+#     "guardian_name": "Maria Perez",
+#     "guardian_phone": "123-456-7890",
+#     "guardian_email": "maria.perez@example.com",
+#     "guardian_relationship": {
+#         "mother": true,
+#         "father": false,
+#         "other": false,
+#         "description": ""
+#    }
+# }
+
+# eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzY5ODQ2MjIwLCJleHAiOjE3Njk4NDgwMjAsInJvbCI6InVzdWFyaW8ifQ.ntXpaUSy_GPA7UYMeIA6RFZKdN2GMotuBF3omtN-9iI
+
+### CREATE STUDENT
+POST http://127.0.0.1:5000/students
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzY5ODgyNDQyLCJleHAiOjE3Njk5Njg4NDIsInJvbCI6ImVzdHVkaWFudGUifQ.Qxvoc8pRJdp8mqTO1YX0OBgaj7LX2BUup_glUMd3jQM
+
+{
+  "full_name": "Juan Perez",
+  "document_id": "1001001001",
+  "date_of_birth": "2000-01-01",
+  "email": "juan.perez@example.com",
+  "phone": "+34600123456",
+  "address": "Calle Falsa 123, Madrid",
+  "medical_conditions": "Ninguna",
+  "allergies": "Polen",
+  "emergency_contact_name": "Maria Perez",
+  "emergency_contact_phone": "+34600987654"
+}
