@@ -11,13 +11,13 @@
 #     "rol": "admin"
 # }
 
-# // login
+// login
 # POST http://127.0.0.1:5000/login
 # Content-Type: application/json
 
 # {
-#     "identifier": "Pao@gmail.com",
-#     "password": "Pao123*"
+#     "identifier": "pao02@gmail.com",
+#     "password": "Paola123*"
 # }
 
 # //Studients 
@@ -43,19 +43,25 @@
 # eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzY5ODQ2MjIwLCJleHAiOjE3Njk4NDgwMjAsInJvbCI6InVzdWFyaW8ifQ.ntXpaUSy_GPA7UYMeIA6RFZKdN2GMotuBF3omtN-9iI
 
 ### CREATE STUDENT
-POST http://127.0.0.1:5000/students
-Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzY5ODgyNDQyLCJleHAiOjE3Njk5Njg4NDIsInJvbCI6ImVzdHVkaWFudGUifQ.Qxvoc8pRJdp8mqTO1YX0OBgaj7LX2BUup_glUMd3jQM
+# POST http://127.0.0.1:5000/students
+# Content-Type: application/json
+# Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzY5ODgyNDQyLCJleHAiOjE3Njk5Njg4NDIsInJvbCI6ImVzdHVkaWFudGUifQ.Qxvoc8pRJdp8mqTO1YX0OBgaj7LX2BUup_glUMd3jQM
 
-{
-  "full_name": "Juan Perez",
-  "document_id": "1001001001",
-  "date_of_birth": "2000-01-01",
-  "email": "juan.perez@example.com",
-  "phone": "+34600123456",
-  "address": "Calle Falsa 123, Madrid",
-  "medical_conditions": "Ninguna",
-  "allergies": "Polen",
-  "emergency_contact_name": "Maria Perez",
-  "emergency_contact_phone": "+34600987654"
-}
+# {
+#   "full_name": "Juan Perez",
+#   "document_id": "1001001001",
+#   "date_of_birth": "2000-01-01",
+#   "email": "juan.perez@example.com",
+#   "phone": "+34600123456",
+#   "address": "Calle Falsa 123, Madrid",
+#   "medical_conditions": "Ninguna",
+#   "allergies": "Polen",
+#   "emergency_contact_name": "Maria Perez",
+#   "emergency_contact_phone": "+34600987654"
+# }
+
+
+### GET STUDENT
+GET http://127.0.0.1:5000/students
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1IiwiaWF0IjoxNzcwNjk1ODM3LCJleHAiOjE3NzA3ODIyMzcsInJvbCI6IkFkbWluIn0.znkZJdDr3rpmqi7Ey2MiWz7Zy0a2ZFjGh6o1q22I6_A

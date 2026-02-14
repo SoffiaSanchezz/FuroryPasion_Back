@@ -45,3 +45,9 @@ def update_student_route(student_id):
 @jwt_required
 def delete_student_route(student_id):
     return StudentController.delete_student(student_id)
+
+@student_bp.route('/students/<int:student_id>/status', methods=['PATCH'])
+@cross_origin(**student_cors_config)
+@jwt_required
+def toggle_student_status_route(student_id):
+    return StudentController.toggle_student_status(student_id)

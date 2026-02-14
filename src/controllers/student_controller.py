@@ -8,45 +8,64 @@ import io
 class StudentController:
     @staticmethod
     def _process_incoming_data():
-        # Prefer JSON body, but also handle form-data for mixed content if needed
-        data = request.get_json()
+        raw_data = request.get_json()
+        data = {} # Initialize data as an empty dict to build up
         photo_file = None
         signature_file = None
 
-        if data is None:
-            # If not JSON, try form data (e.g., for direct file uploads or mixed content)
-            data = request.form.to_dict()
-            if 'photo' in request.files:
-                photo_file = request.files['photo']
-        
-        # Convert Base64 strings to FileStorage objects if present in data
-        if 'photo_file_base64' in data and data['photo_file_base64']:
+        if raw_data is None:
+            # Fallback for form-data, though frontend sends JSON
+            # If the request is not JSON, raw_data will be empty, leading to errors.
+            # For this project, we assume JSON.
+            # print("Warning: No JSON data received. Attempting to parse form data.")
+            pass # Keep raw_data as None or handle specifically if form data is expected
+
+        # Extract photo and signature if present as base64
+        if raw_data and 'photo_file_base64' in raw_data and raw_data['photo_file_base64']:
             try:
-                # Assuming data:image/png;base64,... format, extract base64 part
-                base64_string = data['photo_file_base64'].split(',')[1]
+                base64_string = raw_data['photo_file_base64'].split(',')[1]
                 image_data = base64.b64decode(base64_string)
                 photo_file = FileStorage(io.BytesIO(image_data), filename='photo.png', content_type='image/png')
-                del data['photo_file_base64'] # Remove from data to avoid passing base64 string
             except Exception as e:
-                current_app.logger.error(f"Error processing photo_file_base64: {e}")
-                # Optionally, add an error to the response or handle it gracefully
+                # current_app.logger.error(f"Error processing photo_file_base64: {e}")
+                pass # Handle error gracefully, e.g., return error message or default to None
 
-        if 'signature_image_base64' in data and data['signature_image_base64']:
+        if raw_data and 'signature_image_base64' in raw_data and raw_data['signature_image_base64']:
             try:
-                base64_string = data['signature_image_base64'].split(',')[1]
+                base64_string = raw_data['signature_image_base64'].split(',')[1]
                 image_data = base64.b64decode(base64_string)
                 signature_file = FileStorage(io.BytesIO(image_data), filename='signature.png', content_type='image/png')
-                del data['signature_image_base64']
             except Exception as e:
-                current_app.logger.error(f"Error processing signature_image_base64: {e}")
+                # current_app.logger.error(f"Error processing signature_image_base64: {e}")
+                pass # Handle error gracefully
 
-        # Convert boolean fields if they come as strings from form-data
-        if 'is_minor' in data:
-            data['is_minor'] = data['is_minor'].lower() == 'true'
+        # Flatten 'student' data
+        if raw_data and 'student' in raw_data:
+            data.update(raw_data['student'])
+            # Asegurarse de que el email sea None si es una cadena vacía
+            if 'email' in data and data['email'] == '':
+                data['email'] = None
         
-        # Ensure guardian_relationship is correctly parsed if it comes as a string
-        if 'guardian_relationship' in data and isinstance(data['guardian_relationship'], str):
-             data['guardian_relationship'] = data['guardian_relationship'] # Keep as string, backend expects string
+        # Handle 'is_minor' and 'guardian' data
+        is_minor = raw_data.get('is_minor', False) if raw_data else False
+        data['is_minor'] = bool(is_minor) # Asegurarse de que es un booleano
+
+        if data['is_minor'] and raw_data and 'guardian' in raw_data:
+            for key, value in raw_data['guardian'].items():
+                if key == 'email' and value == '': # Handle empty guardian email
+                    data['guardian_email'] = None
+                else:
+                    data[f'guardian_{key}'] = value
+        
+        # Handle top-level 'status' for PATCH requests (e.g., toggle student status)
+        if 'status' in raw_data:
+            data['status'] = raw_data['status']
+
+        # Remove original nested objects and base64 fields from the main 'data' to avoid confusion later
+        data.pop('student', None) # Ya aplanado
+        data.pop('guardian', None) # Ya aplanado o no presente
+        data.pop('photo_file_base64', None) # Ya procesado en photo_file
+        data.pop('signature_image_base64', None) # Ya procesado en signature_file
 
         return data, photo_file, signature_file
 
@@ -95,11 +114,17 @@ class StudentController:
         return jsonify(student.serialize()), 200
 
     @staticmethod
-    def delete_student(student_id):
+    def toggle_student_status(student_id): # New method for toggling status
         user_id = g.current_user_id
-        success, errors = StudentService.delete_student(user_id, student_id)
+        data = request.get_json() # Get only the status from the request
+        new_status = data.get('status')
+
+        if new_status not in ['activo', 'inactivo']:
+            return jsonify({"error": "Estado inválido"}), 400
+
+        student, errors = StudentService.toggle_student_status(user_id, student_id, new_status)
 
         if errors:
             return jsonify({"error": errors['general']}), 404
         
-        return jsonify({"message": "Estudiante eliminado correctamente (soft delete)"}), 200
+        return jsonify(student.serialize()), 200

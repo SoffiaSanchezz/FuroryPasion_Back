@@ -1,3 +1,9 @@
+import re
+from datetime import datetime, date
+from src.database.db import db
+from src.models.Student import Student
+from src.utils.file_upload_helper import FileUploadHelper
+
 class StudentService:
     @staticmethod
     def _calculate_age(date_of_birth):
@@ -10,16 +16,16 @@ class StudentService:
     def _validate_student_data(data, is_new_student=True, existing_student=None):
         errors = {}
 
-        # Validaciones de campos obligatorios
-        if not data.get('full_name'):
+        # Validaciones de campos obligatorios, omitir 'status' si no es parte de la creación/actualización principal
+        if 'full_name' in data and not data['full_name']:
             errors['full_name'] = 'El nombre completo es obligatorio.'
-        if not data.get('document_id'):
+        if 'document_id' in data and not data['document_id']:
             errors['document_id'] = 'El documento de identidad es obligatorio.'
-        if not data.get('date_of_birth'):
+        if 'date_of_birth' in data and not data['date_of_birth']:
             errors['date_of_birth'] = 'La fecha de nacimiento es obligatoria.'
-        if not data.get('phone'):
+        if 'phone' in data and not data['phone']:
             errors['phone'] = 'El teléfono es obligatorio.'
-        if not data.get('address'):
+        if 'address' in data and not data['address']:
             errors['address'] = 'La dirección es obligatoria.'
 
         # Validar formato de email si está presente
@@ -49,7 +55,8 @@ class StudentService:
                 errors['document_id'] = 'Ya existe un estudiante con este documento de identidad.'
 
         # Lógica de acudiente basada en 'is_minor' del controlador
-        is_minor_from_data = data.get('is_minor', False) # Use the is_minor value passed from the controller
+        # Si 'is_minor' no está en los datos de entrada, usar el valor existente para actualizaciones o False para nuevos
+        is_minor_from_data = data.get('is_minor', existing_student.is_minor if existing_student else False)
 
         if is_minor_from_data:
             # Validar campos del acudiente si es menor de edad
@@ -61,14 +68,19 @@ class StudentService:
                 errors['guardian_phone'] = 'El teléfono del acudiente es obligatorio para menores.'
             if not data.get('guardian_relationship'):
                 errors['guardian_relationship'] = 'El parentesco del acudiente es obligatorio para menores.'
+            if not data.get('guardian_email'):
+                errors['guardian_email'] = 'El correo electrónico del acudiente es obligatorio para menores.'
+            elif not re.match(r"[^@]+@[^@]+\.[^@]+", data['guardian_email']):
+                errors['guardian_email'] = 'El formato del correo electrónico del acudiente no es válido.'
         else:
             # Si es mayor de edad, asegurarse de que los campos del acudiente sean nulos
             data['guardian_full_name'] = None
             data['guardian_document_id'] = None
             data['guardian_phone'] = None
             data['guardian_relationship'] = None
+            data['guardian_email'] = None
         
-        data['is_minor'] = is_minor_from_data # Ensure 'is_minor' is set in validated_data
+        data['is_minor'] = is_minor_from_data # Asegurarse de que 'is_minor' esté establecido en validated_data
 
         return errors, data
 
@@ -81,7 +93,7 @@ class StudentService:
         # Guardar la foto si se proporciona
         photo_path = None
         if photo_file:
-            photo_path, upload_error = FileUploadHelper.save_photo(photo_file, "student_photos") # Specify folder
+            photo_path, upload_error = FileUploadHelper.save_photo(photo_file, "student_photos") # Especificar subcarpeta
             if upload_error:
                 errors['photo'] = upload_error
                 return None, errors
@@ -89,7 +101,7 @@ class StudentService:
         # Guardar la firma si se proporciona
         signature_path = None
         if signature_file:
-            signature_path, upload_error = FileUploadHelper.save_photo(signature_file, "student_signatures") # Specify folder
+            signature_path, upload_error = FileUploadHelper.save_photo(signature_file, "student_signatures") # Especificar subcarpeta
             if upload_error:
                 errors['signature'] = upload_error
                 return None, errors
@@ -103,12 +115,13 @@ class StudentService:
             phone=validated_data['phone'],
             address=validated_data['address'],
             photo_path=photo_path,
-            signature_path=signature_path, # Assign signature path
+            signature_path=signature_path, # Incluir nuevo campo
             is_minor=validated_data['is_minor'],
             guardian_full_name=validated_data.get('guardian_full_name'),
             guardian_document_id=validated_data.get('guardian_document_id'),
             guardian_phone=validated_data.get('guardian_phone'),
-            guardian_relationship=validated_data.get('guardian_relationship')
+            guardian_relationship=validated_data.get('guardian_relationship'),
+            guardian_email=validated_data.get('guardian_email')
         )
         db.session.add(new_student)
         db.session.commit()
@@ -116,14 +129,14 @@ class StudentService:
 
     @staticmethod
     def get_all_students(user_id):
-        # Asegúrate de que solo los estudiantes activos sean listados por defecto
-        # A menos que se especifique lo contrario en los parámetros de la solicitud
-        students = Student.query.filter_by(user_id=user_id, status='activo').all()
+        # Ahora devuelve todos los estudiantes asociados al user_id, el filtrado por estado lo hará el frontend
+        students = Student.query.filter_by(user_id=user_id).all()
         return students
 
     @staticmethod
     def get_student_by_id(user_id, student_id):
-        student = Student.query.filter_by(user_id=user_id, id=student_id, status='activo').first()
+        # Devuelve el estudiante por ID sin filtrar por estado
+        student = Student.query.filter_by(user_id=user_id, id=student_id).first()
         return student
 
     @staticmethod
@@ -156,19 +169,35 @@ class StudentService:
         elif 'signature_path' in data: # Permitir borrar la firma si se envía signature_path: null
             student.signature_path = validated_data.get('signature_path')
 
+        # Actualizar campos del estudiante
+        student.full_name = validated_data.get('full_name', student.full_name)
+        student.document_id = validated_data.get('document_id', student.document_id)
+        if validated_data.get('date_of_birth'):
+            student.date_of_birth = datetime.strptime(validated_data['date_of_birth'], '%Y-%m-%d').date()
+        student.email = validated_data.get('email', student.email)
+        student.phone = validated_data.get('phone', student.phone)
+        student.address = validated_data.get('address', student.address)
+        student.is_minor = validated_data.get('is_minor', student.is_minor)
 
-        student.full_name = validated_data['full_name']
-        student.document_id = validated_data['document_id']
-        student.date_of_birth = datetime.strptime(validated_data['date_of_birth'], '%Y-%m-%d').date()
-        student.email = validated_data.get('email')
-        student.phone = validated_data['phone']
-        student.address = validated_data['address']
-        student.is_minor = validated_data['is_minor']
-        student.guardian_full_name = validated_data.get('guardian_full_name')
-        student.guardian_document_id = validated_data.get('guardian_document_id')
-        student.guardian_phone = validated_data.get('guardian_phone')
-        student.guardian_relationship = validated_data.get('guardian_relationship')
+        student.guardian_full_name = validated_data.get('guardian_full_name', student.guardian_full_name)
+        student.guardian_document_id = validated_data.get('guardian_document_id', student.guardian_document_id)
+        student.guardian_phone = validated_data.get('guardian_phone', student.guardian_phone)
+        student.guardian_relationship = validated_data.get('guardian_relationship', student.guardian_relationship)
+        student.guardian_email = validated_data.get('guardian_email', student.guardian_email)
 
+        db.session.commit()
+        return student, None
+
+    @staticmethod
+    def toggle_student_status(user_id, student_id, new_status):
+        student = Student.query.filter_by(user_id=user_id, id=student_id).first()
+        if not student:
+            return None, {'general': 'Estudiante no encontrado o no autorizado.'}
+        
+        if new_status not in ['activo', 'inactivo']:
+            return None, {'general': 'Estado no válido.'}
+        
+        student.status = new_status
         db.session.commit()
         return student, None
 
@@ -190,5 +219,5 @@ class StudentService:
     @staticmethod
     def get_student_signature_url(student):
         if student and student.signature_path:
-            return FileUploadHelper.get_photo_url(student.signature_path) # Reuse get_photo_url for signature
+            return FileUploadHelper.get_photo_url(student.signature_path) # Reutilizar get_photo_url para la firma
         return None

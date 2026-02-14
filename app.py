@@ -1,9 +1,10 @@
-from flask import Flask
+from flask import Flask, send_from_directory # Import send_from_directory
 from config import Config
 from src.database.db import db
 from src.routes.auth import auth_bp
-from src.routes.student import student_bp # Importar el blueprint de estudiantes
+from src.routes.student import student_bp
 from flask_cors import CORS
+import os # Import os
 
 def create_app():
     app = Flask(__name__)
@@ -11,7 +12,17 @@ def create_app():
     CORS(app)
     db.init_app(app)
     app.register_blueprint(auth_bp)
-    app.register_blueprint(student_bp) # Registrar el blueprint de estudiantes
+    app.register_blueprint(student_bp)
+
+    # NEW: Serve uploaded files statically
+    UPLOAD_DIR = os.path.join(app.root_path, 'uploads')
+    if not os.path.exists(UPLOAD_DIR):
+        os.makedirs(UPLOAD_DIR) # Ensure uploads directory exists
+
+    @app.route('/uploads/<path:filename>')
+    def serve_uploaded_file(filename):
+        return send_from_directory(UPLOAD_DIR, filename)
+    # END NEW
 
     with app.app_context():
         db.create_all()

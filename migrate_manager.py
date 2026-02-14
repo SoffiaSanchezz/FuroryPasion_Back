@@ -5,7 +5,11 @@ Script para manejar migraciones de manera más sencilla
 
 import os
 import sys
+from dotenv import load_dotenv # Add this
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# Cargar variables de entorno desde el archivo .env
+load_dotenv() # Add this
 
 # Configuración forzada para evitar conflictos
 os.environ['FLASK_ENV'] = 'local'
@@ -18,8 +22,10 @@ from flask_migrate import Migrate
 app = Flask(__name__)
 
 # Configuración PostgreSQL para migraciones
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/softbee_migrations")
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+
 
 # Inicializar extensiones
 db = SQLAlchemy(app)
@@ -27,7 +33,9 @@ migrate = Migrate(app, db)
 
 # Importar todos los modelos SQLAlchemy
 with app.app_context():
-    from src.models.sqlalchemy_models import *
+    from src.models.Student import Student # Add this
+    from src.models.User import User # Add this
+    from src.models.password_reset_tokens import PasswordResetToken # Add this
 
 if __name__ == '__main__':
     db_url = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/softbee_migrations")

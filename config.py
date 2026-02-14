@@ -24,3 +24,6 @@ class Config:
 
     # URL del frontend (para reset de contraseña, etc.)
     FRONTEND_URL = os.environ.get('FRONTEND_URL') or 'http://localhost:4200'
+
+    # URL base del backend (para construir URLs completas de archivos subidos)
+    BASE_URL = os.environ.get('BACKEND_BASE_URL') or 'http://localhost:5000'

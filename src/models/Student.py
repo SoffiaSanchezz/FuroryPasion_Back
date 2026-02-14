@@ -23,6 +23,7 @@ class Student(db.Model):
     guardian_document_id = db.Column(db.String(50), nullable=True)
     guardian_phone = db.Column(db.String(50), nullable=True)
     guardian_relationship = db.Column(db.String(50), nullable=True) # Ej: 'Padre', 'Madre', 'Tutor'
+    guardian_email = db.Column(db.String(120), nullable=True)
 
     status = db.Column(db.String(50), default='activo', nullable=False) # activo / inactivo (para soft delete)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
@@ -55,7 +56,8 @@ class Student(db.Model):
                 "guardian_full_name": self.guardian_full_name,
                 "guardian_document_id": self.guardian_document_id,
                 "guardian_phone": self.guardian_phone,
-                "guardian_relationship": self.guardian_relationship
+                "guardian_relationship": self.guardian_relationship,
+                "guardian_email": self.guardian_email
             })
         return data
 
