@@ -3,6 +3,8 @@ from config import Config
 from src.database.db import db
 from src.routes.auth import auth_bp
 from src.routes.student import student_bp
+from src.routes.schedule import schedule_bp
+from src.routes.payment import payment_bp
 from flask_cors import CORS
 import os # Import os
 
@@ -13,6 +15,8 @@ def create_app():
     db.init_app(app)
     app.register_blueprint(auth_bp)
     app.register_blueprint(student_bp)
+    app.register_blueprint(schedule_bp)
+    app.register_blueprint(payment_bp)
 
     # NEW: Serve uploaded files statically
     UPLOAD_DIR = os.path.join(app.root_path, 'uploads')
