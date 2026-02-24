@@ -23,11 +23,13 @@ class ActivityController:
             
             if 'image' in request.files:
                 image_file = request.files['image']
-        else:
+        elif request.is_json: # Add this check
             # Assume application/json
             data = request.get_json()
+        else: # Handle other cases where no file and not json
+            return {}, None, {"errors": "Tipo de contenido no soportado o datos faltantes."}, 415
 
-        if data is None:
+        if data is None: # This check is still needed if request.get_json() returns None
             return {}, None, {"errors": "No se recibieron datos."}, 400
 
         # Process base64 image if present (alternative to multipart)

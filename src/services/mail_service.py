@@ -1,6 +1,7 @@
 from flask_mail import Mail, Message
 from flask import current_app, render_template
 import os
+from datetime import datetime # Import datetime
 
 mail = Mail()
 
@@ -29,7 +30,8 @@ class MailService:
                 msg.html = render_template(
                     'emails/activity_invitation.html',
                     activity=activity_data,
-                    base_url=current_app.config['BASE_URL']
+                    base_url=current_app.config['BASE_URL'],
+                    current_year=datetime.utcnow().year # Pass current year to template
                 )
 
                 # Attach image if provided
