@@ -50,3 +50,23 @@ class FileUploadHelper:
                 base_url = request.url_root.rstrip('/')
             return f"{base_url}/{photo_path}"
         return None
+
+    @staticmethod
+    def delete_file(file_path):
+        """
+        Elimina un archivo del sistema de archivos del servidor.
+        file_path es la ruta relativa devuelta por save_photo.
+        """
+        if not file_path:
+            return False, "Ruta de archivo no proporcionada."
+
+        abs_file_path = os.path.join(current_app.root_path, file_path)
+        
+        if os.path.exists(abs_file_path):
+            try:
+                os.remove(abs_file_path)
+                return True, None
+            except Exception as e:
+                return False, f"Error al eliminar el archivo: {e}"
+        else:
+            return False, "El archivo no existe."
