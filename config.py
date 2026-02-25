@@ -27,3 +27,11 @@ class Config:
 
     # URL base del backend (para construir URLs completas de archivos subidos)
     BASE_URL = os.environ.get('BACKEND_BASE_URL') or 'http://localhost:5000'
+
+    # Configuraciones de Flask-Mail
+    MAIL_SERVER = os.environ.get('MAIL_SERVER') or 'smtp.example.com' # Replace with your SMTP server
+    MAIL_PORT = int(os.environ.get('MAIL_PORT') or 587)
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') == 'True'
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER') or 'noreply@example.com' # Replace with your default sender

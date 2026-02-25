@@ -6,6 +6,11 @@ from functools import wraps
 def jwt_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        # Permitir que las solicitudes OPTIONS (preflight) pasen sin verificación JWT
+        if request.method == 'OPTIONS':
+            current_app.logger.debug("Solicitud OPTIONS detectada, omitiendo verificación JWT.")
+            return f(*args, **kwargs) # Permite que flask_cors maneje la respuesta OPTIONS
+        
         token = None
         
         # 1. Obtener token de los headers

@@ -36,6 +36,10 @@ with app.app_context():
     from src.models.Student import Student # Add this
     from src.models.User import User # Add this
     from src.models.password_reset_tokens import PasswordResetToken # Add this
+    from src.models.Schedule import Schedule # Add this
+    from src.models.Attendance import Attendance # Add this
+    from src.models.Payment import Payment # Add this
+    from src.models.Activity import Activity # Add this
 
 if __name__ == '__main__':
     db_url = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/softbee_migrations")
