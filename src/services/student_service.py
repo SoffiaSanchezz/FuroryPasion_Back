@@ -3,6 +3,7 @@ from datetime import datetime, date
 from src.database.db import db
 from src.models.Student import Student
 from src.utils.file_upload_helper import FileUploadHelper
+from flask import current_app # Import current_app for logging
 
 class StudentService:
     @staticmethod
@@ -68,9 +69,7 @@ class StudentService:
                 errors['guardian_phone'] = 'El teléfono del acudiente es obligatorio para menores.'
             if not data.get('guardian_relationship'):
                 errors['guardian_relationship'] = 'El parentesco del acudiente es obligatorio para menores.'
-            if not data.get('guardian_email'):
-                errors['guardian_email'] = 'El correo electrónico del acudiente es obligatorio para menores.'
-            elif not re.match(r"[^@]+@[^@]+\.[^@]+", data['guardian_email']):
+            if data.get('guardian_email') and not re.match(r"[^@]+@[^@]+\.[^@]+", data['guardian_email']):
                 errors['guardian_email'] = 'El formato del correo electrónico del acudiente no es válido.'
         else:
             # Si es mayor de edad, asegurarse de que los campos del acudiente sean nulos
@@ -88,6 +87,7 @@ class StudentService:
     def create_student(user_id, data, photo_file=None, signature_file=None):
         errors, validated_data = StudentService._validate_student_data(data, is_new_student=True)
         if errors:
+            current_app.logger.error(f"Validation errors during student creation: {errors}")
             return None, errors
 
         # Guardar la foto si se proporciona
@@ -95,6 +95,7 @@ class StudentService:
         if photo_file:
             photo_path, upload_error = FileUploadHelper.save_photo(photo_file, "student_photos") # Especificar subcarpeta
             if upload_error:
+                current_app.logger.error(f"Error uploading student photo: {upload_error}")
                 errors['photo'] = upload_error
                 return None, errors
 
@@ -103,6 +104,7 @@ class StudentService:
         if signature_file:
             signature_path, upload_error = FileUploadHelper.save_photo(signature_file, "student_signatures") # Especificar subcarpeta
             if upload_error:
+                current_app.logger.error(f"Error uploading student signature: {upload_error}")
                 errors['signature'] = upload_error
                 return None, errors
 
@@ -123,9 +125,14 @@ class StudentService:
             guardian_relationship=validated_data.get('guardian_relationship'),
             guardian_email=validated_data.get('guardian_email')
         )
-        db.session.add(new_student)
-        db.session.commit()
-        return new_student, None
+        try:
+            db.session.add(new_student)
+            db.session.commit()
+            return new_student, None
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Database error during student creation: {e}", exc_info=True)
+            return None, {'general': 'Error al guardar el estudiante en la base de datos.'}
 
     @staticmethod
     def get_all_students(user_id):
@@ -147,12 +154,14 @@ class StudentService:
 
         errors, validated_data = StudentService._validate_student_data(data, is_new_student=False, existing_student=student)
         if errors:
+            current_app.logger.error(f"Validation errors during student update for ID {student_id}: {errors}")
             return None, errors
 
         # Actualizar la foto si se proporciona una nueva
         if photo_file:
             photo_path, upload_error = FileUploadHelper.save_photo(photo_file, "student_photos") # Specify folder
             if upload_error:
+                current_app.logger.error(f"Error uploading student photo during update for ID {student_id}: {upload_error}")
                 errors['photo'] = upload_error
                 return None, errors
             student.photo_path = photo_path
@@ -163,6 +172,7 @@ class StudentService:
         if signature_file:
             signature_path, upload_error = FileUploadHelper.save_photo(signature_file, "student_signatures") # Specify folder
             if upload_error:
+                current_app.logger.error(f"Error uploading student signature during update for ID {student_id}: {upload_error}")
                 errors['signature'] = upload_error
                 return None, errors
             student.signature_path = signature_path
@@ -185,8 +195,13 @@ class StudentService:
         student.guardian_relationship = validated_data.get('guardian_relationship', student.guardian_relationship)
         student.guardian_email = validated_data.get('guardian_email', student.guardian_email)
 
-        db.session.commit()
-        return student, None
+        try:
+            db.session.commit()
+            return student, None
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Database error during student update for ID {student_id}: {e}", exc_info=True)
+            return None, {'general': 'Error al actualizar el estudiante en la base de datos.'}
 
     @staticmethod
     def toggle_student_status(user_id, student_id, new_status):

@@ -52,8 +52,8 @@ class StudentController:
 
         if data['is_minor'] and raw_data and 'guardian' in raw_data:
             for key, value in raw_data['guardian'].items():
-                if key == 'email' and value == '': # Handle empty guardian email
-                    data['guardian_email'] = None
+                if value == '': # Convert empty strings to None
+                    data[f'guardian_{key}'] = None
                 else:
                     data[f'guardian_{key}'] = value
         

@@ -45,20 +45,17 @@ class Student(db.Model):
             "phone": self.phone,
             "address": self.address,
             "photo_path": self.photo_path,
-            "signature_path": self.signature_path, # Include new field
+            "signature_path": self.signature_path,
             "is_minor": self.is_minor,
+            "guardian_full_name": self.guardian_full_name, # Always include guardian fields
+            "guardian_document_id": self.guardian_document_id,
+            "guardian_phone": self.guardian_phone,
+            "guardian_relationship": self.guardian_relationship,
+            "guardian_email": self.guardian_email,
             "status": self.status,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat()
         }
-        if self.is_minor:
-            data.update({
-                "guardian_full_name": self.guardian_full_name,
-                "guardian_document_id": self.guardian_document_id,
-                "guardian_phone": self.guardian_phone,
-                "guardian_relationship": self.guardian_relationship,
-                "guardian_email": self.guardian_email
-            })
         return data
 
     def soft_delete(self):
