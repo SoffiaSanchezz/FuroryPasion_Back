@@ -60,6 +60,10 @@ class StudentController:
         # Handle top-level 'status' for PATCH requests (e.g., toggle student status)
         if 'status' in raw_data:
             data['status'] = raw_data['status']
+        
+        # Capture face_descriptor
+        if 'face_descriptor' in raw_data:
+            data['face_descriptor'] = raw_data['face_descriptor']
 
         # Remove original nested objects and base64 fields from the main 'data' to avoid confusion later
         data.pop('student', None) # Ya aplanado

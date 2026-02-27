@@ -81,6 +81,10 @@ class StudentService:
             data['guardian_email'] = None
         
         data['is_minor'] = is_minor_from_data # Asegurarse de que 'is_minor' esté establecido en validated_data
+        
+        # Pasar face_descriptor si existe
+        if 'face_descriptor' in data:
+            data['face_descriptor'] = data['face_descriptor']
 
         return errors, data
 
@@ -115,7 +119,8 @@ class StudentService:
             phone=validated_data['phone'],
             address=validated_data['address'],
             photo_path=photo_path,
-            signature_path=signature_path, # Incluir nuevo campo
+            signature_path=signature_path,
+            face_descriptor=validated_data.get('face_descriptor'),
             is_minor=validated_data['is_minor'],
             guardian_full_name=validated_data.get('guardian_full_name'),
             guardian_document_id=validated_data.get('guardian_document_id'),
@@ -168,6 +173,9 @@ class StudentService:
             student.signature_path = signature_path
         elif 'signature_path' in data: # Permitir borrar la firma si se envía signature_path: null
             student.signature_path = validated_data.get('signature_path')
+
+        if 'face_descriptor' in validated_data:
+            student.face_descriptor = validated_data.get('face_descriptor')
 
         # Actualizar campos del estudiante
         student.full_name = validated_data.get('full_name', student.full_name)
