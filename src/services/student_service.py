@@ -86,12 +86,13 @@ class StudentService:
                 import json
                 descriptor = json.loads(data['face_descriptor'])
                 if not isinstance(descriptor, list) or len(descriptor) != 128:
-                    errors['face_descriptor'] = 'El descriptor facial debe ser una lista de 128 números.'
-            except (json.JSONDecodeError, TypeError):
+                    errors['face_descriptor'] = 'El descriptor facial debe ser una lista de exactamente 128 floats.'
+            except Exception:
                 errors['face_descriptor'] = 'El formato del descriptor facial es inválido.'
+        else:
+            errors['face_descriptor'] = 'La biometría facial es obligatoria para el registro.'
         
-        data['is_minor'] = is_minor_from_data # Asegurarse de que 'is_minor' esté establecido en validated_data
-        
+        data['is_minor'] = is_minor_from_data
         return errors, data
 
     @staticmethod
