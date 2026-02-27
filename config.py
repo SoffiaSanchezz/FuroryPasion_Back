@@ -1,4 +1,5 @@
 import os
+import secrets
 from dotenv import load_dotenv
 
 # Cargar variables de entorno desde el archivo .env
@@ -8,8 +9,14 @@ class Config:
     """
     Configuraciones para la aplicación Flask.
     """
-    # Clave secreta para firmar sesiones y tokens
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'una-llave-secreta-de-respaldo'
+    # Clave secreta: En producción debe venir de ENV. En desarrollo, generamos una segura si falta.
+    SECRET_KEY = os.environ.get('SECRET_KEY')
+    if not SECRET_KEY:
+        # Generar una clave segura de 32 bytes (64 caracteres hex) para HMAC-SHA256
+        SECRET_KEY = secrets.token_hex(32)
+        # Opcional: Advertir en consola si no es producción
+        if os.environ.get('FLASK_ENV') != 'production':
+            print(f"ADVERTENCIA: Usando SECRET_KEY generada automáticamente: {SECRET_KEY[:8]}...")
     
     # Configuración de la base de datos a partir de la variable de entorno
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
@@ -18,7 +25,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Configuraciones JWT
-    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or SECRET_KEY # Reutilizar SECRET_KEY o usar uno diferente
+    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or SECRET_KEY
     JWT_ALGORITHM = os.environ.get('JWT_ALGORITHM') or 'HS256'
     JWT_ACCESS_TOKEN_EXPIRES = int(os.environ.get('JWT_ACCESS_TOKEN_EXPIRES') or 1440) # En minutos (24 horas)
 

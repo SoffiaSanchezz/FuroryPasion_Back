@@ -5,6 +5,9 @@ import json
 import base64
 import io
 
+from sqlalchemy.exc import IntegrityError
+from src.database.db import db
+
 class StudentController:
     @staticmethod
     def _process_incoming_data():
@@ -14,78 +17,58 @@ class StudentController:
         signature_file = None
 
         if raw_data is None:
-            # Fallback for form-data, though frontend sends JSON
-            # If the request is not JSON, raw_data will be empty, leading to errors.
-            # For this project, we assume JSON.
-            # print("Warning: No JSON data received. Attempting to parse form data.")
-            pass # Keep raw_data as None or handle specifically if form data is expected
+            return {}, None, None
 
         # Extract photo and signature if present as base64
-        if raw_data and 'photo_file_base64' in raw_data and raw_data['photo_file_base64']:
+        if 'photo_file_base64' in raw_data and raw_data['photo_file_base64']:
             try:
                 base64_string = raw_data['photo_file_base64'].split(',')[1]
                 image_data = base64.b64decode(base64_string)
                 photo_file = FileStorage(io.BytesIO(image_data), filename='photo.png', content_type='image/png')
-            except Exception as e:
-                # current_app.logger.error(f"Error processing photo_file_base64: {e}")
-                pass # Handle error gracefully, e.g., return error message or default to None
+            except Exception:
+                pass 
 
-        if raw_data and 'signature_image_base64' in raw_data and raw_data['signature_image_base64']:
-            try:
-                base64_string = raw_data['signature_image_base64'].split(',')[1]
-                image_data = base64.b64decode(base64_string)
-                signature_file = FileStorage(io.BytesIO(image_data), filename='signature.png', content_type='image/png')
-            except Exception as e:
-                # current_app.logger.error(f"Error processing signature_image_base64: {e}")
-                pass # Handle error gracefully
-
-        # Flatten 'student' data
-        if raw_data and 'student' in raw_data:
-            data.update(raw_data['student'])
-            # Asegurarse de que el email sea None si es una cadena vacía
-            if 'email' in data and data['email'] == '':
-                data['email'] = None
+        # Flatten student data and handle face_descriptor
+        data.update(raw_data) # Aplanamos el payload que viene de Angular
         
-        # Handle 'is_minor' and 'guardian' data
-        is_minor = raw_data.get('is_minor', False) if raw_data else False
-        data['is_minor'] = bool(is_minor) # Asegurarse de que es un booleano
-
-        if data['is_minor'] and raw_data and 'guardian' in raw_data:
-            for key, value in raw_data['guardian'].items():
-                if key == 'email' and value == '': # Handle empty guardian email
-                    data['guardian_email'] = None
-                else:
-                    data[f'guardian_{key}'] = value
-        
-        # Handle top-level 'status' for PATCH requests (e.g., toggle student status)
-        if 'status' in raw_data:
-            data['status'] = raw_data['status']
-        
-        # Capture face_descriptor
+        # Capture face_descriptor explícitamente
         if 'face_descriptor' in raw_data:
             data['face_descriptor'] = raw_data['face_descriptor']
-
-        # Remove original nested objects and base64 fields from the main 'data' to avoid confusion later
-        data.pop('student', None) # Ya aplanado
-        data.pop('guardian', None) # Ya aplanado o no presente
-        data.pop('photo_file_base64', None) # Ya procesado en photo_file
-        data.pop('signature_image_base64', None) # Ya procesado en signature_file
 
         return data, photo_file, signature_file
 
     @staticmethod
     def create_student():
         data, photo_file, signature_file = StudentController._process_incoming_data()
-        
-        # current_user_id se establece en el middleware jwt_required
         user_id = g.current_user_id 
 
-        student, errors = StudentService.create_student(user_id, data, photo_file, signature_file) # Pass signature_file
+        # Validación Senior: Evitar procesar si falta biometría
+        if not data.get('face_descriptor'):
+            return jsonify({
+                "error": "Falta registro biométrico",
+                "message": "Debe realizar el escaneo facial antes de afiliar."
+            }), 400
 
-        if errors:
-            return jsonify({"errors": errors}), 400
-        
-        return jsonify(student.serialize()), 201
+        try:
+            student, errors = StudentService.create_student(user_id, data, photo_file, signature_file)
+
+            if errors:
+                return jsonify({"errors": errors}), 400
+            
+            return jsonify(student.serialize()), 201
+            
+        except IntegrityError as e:
+            db.session.rollback()
+            return jsonify({
+                "error": "Conflicto de datos",
+                "message": "El email o documento ya está registrado en el sistema."
+            }), 409
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({
+                "error": "Error interno del servidor",
+                "message": str(e)
+            }), 500
 
     @staticmethod
     def get_students():

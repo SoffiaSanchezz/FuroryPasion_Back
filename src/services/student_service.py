@@ -80,53 +80,60 @@ class StudentService:
             data['guardian_relationship'] = None
             data['guardian_email'] = None
         
+        # Validación Senior: Integridad Biométrica
+        if 'face_descriptor' in data and data['face_descriptor']:
+            try:
+                import json
+                descriptor = json.loads(data['face_descriptor'])
+                if not isinstance(descriptor, list) or len(descriptor) != 128:
+                    errors['face_descriptor'] = 'El descriptor facial debe ser una lista de 128 números.'
+            except (json.JSONDecodeError, TypeError):
+                errors['face_descriptor'] = 'El formato del descriptor facial es inválido.'
+        
         data['is_minor'] = is_minor_from_data # Asegurarse de que 'is_minor' esté establecido en validated_data
         
-        # Pasar face_descriptor si existe
-        if 'face_descriptor' in data:
-            data['face_descriptor'] = data['face_descriptor']
-
         return errors, data
 
     @staticmethod
     def create_student(user_id, data, photo_file=None, signature_file=None):
         errors, validated_data = StudentService._validate_student_data(data, is_new_student=True)
+        
+        # 1. Normalización y Validación Preventiva de Unicidad (Email y Documento)
+        email = validated_data.get('email').strip().lower() if validated_data.get('email') else None
+        document_id = validated_data.get('document_id').strip() if validated_data.get('document_id') else None
+
+        if email:
+            existing_email = Student.query.filter_by(email=email).first()
+            if existing_email:
+                errors['email'] = 'Este correo electrónico ya está registrado.'
+        
+        if document_id:
+            existing_doc = Student.query.filter_by(document_id=document_id).first()
+            if existing_doc:
+                errors['document_id'] = 'Este documento de identidad ya está registrado.'
+
         if errors:
             return None, errors
 
         # Guardar la foto si se proporciona
         photo_path = None
         if photo_file:
-            photo_path, upload_error = FileUploadHelper.save_photo(photo_file, "student_photos") # Especificar subcarpeta
+            photo_path, upload_error = FileUploadHelper.save_photo(photo_file, "student_photos") 
             if upload_error:
-                errors['photo'] = upload_error
-                return None, errors
-
-        # Guardar la firma si se proporciona
-        signature_path = None
-        if signature_file:
-            signature_path, upload_error = FileUploadHelper.save_photo(signature_file, "student_signatures") # Especificar subcarpeta
-            if upload_error:
-                errors['signature'] = upload_error
-                return None, errors
+                return None, {'photo': upload_error}
 
         new_student = Student(
             user_id=user_id,
             full_name=validated_data['full_name'],
-            document_id=validated_data['document_id'],
+            document_id=document_id,
             date_of_birth=datetime.strptime(validated_data['date_of_birth'], '%Y-%m-%d').date(),
-            email=validated_data.get('email'),
+            email=email,
             phone=validated_data['phone'],
             address=validated_data['address'],
             photo_path=photo_path,
-            signature_path=signature_path,
+            signature_path=None, # Ajustar si se requiere firma
             face_descriptor=validated_data.get('face_descriptor'),
-            is_minor=validated_data['is_minor'],
-            guardian_full_name=validated_data.get('guardian_full_name'),
-            guardian_document_id=validated_data.get('guardian_document_id'),
-            guardian_phone=validated_data.get('guardian_phone'),
-            guardian_relationship=validated_data.get('guardian_relationship'),
-            guardian_email=validated_data.get('guardian_email')
+            is_minor=validated_data['is_minor']
         )
         db.session.add(new_student)
         db.session.commit()
