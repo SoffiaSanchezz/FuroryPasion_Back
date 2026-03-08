@@ -187,14 +187,6 @@ El sistema implementa varias prácticas de seguridad:
 
 ---
 
-# 🧪 Futuras Mejoras
-
-  - Implementación de tests automatizados
-  - Integración con Docker
-  - Implementación de CI/CD
-
----
-
 # 👩‍💻 Autora
 
 Sofía Sánchez
