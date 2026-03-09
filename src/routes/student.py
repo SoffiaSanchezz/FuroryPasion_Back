@@ -10,6 +10,11 @@ student_bp = Blueprint('students', __name__)
 def get_regulation_route():
     return StudentController.get_regulation()
 
+@student_bp.route('/students/affiliate', methods=['POST'])
+@jwt_required
+def affiliate_student_route():
+    return StudentController.create_student()
+
 @student_bp.route('/students', methods=['POST'])
 @jwt_required
 def create_student_route():
