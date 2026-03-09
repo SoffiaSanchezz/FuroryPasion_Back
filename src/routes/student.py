@@ -16,6 +16,12 @@ student_cors_config = {
     "supports_credentials": True
 }
 
+@student_bp.route('/students/regulation', methods=['GET'])
+@cross_origin(**student_cors_config)
+@jwt_required
+def get_regulation_route():
+    return StudentController.get_regulation()
+
 @student_bp.route('/students', methods=['POST'])
 @cross_origin(**student_cors_config)
 @jwt_required
@@ -33,6 +39,12 @@ def get_students_route():
 @jwt_required
 def get_student_route(student_id):
     return StudentController.get_student(student_id)
+
+@student_bp.route('/students/<int:student_id>/guardian', methods=['GET', 'OPTIONS'])
+@cross_origin(**student_cors_config)
+@jwt_required
+def get_guardian_route(student_id):
+    return StudentController.get_guardian(student_id)
 
 @student_bp.route('/students/<int:student_id>', methods=['PUT'])
 @cross_origin(**student_cors_config)

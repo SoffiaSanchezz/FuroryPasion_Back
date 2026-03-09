@@ -38,6 +38,20 @@ class StudentController:
         return data, photo_file, signature_file
 
     @staticmethod
+    def get_regulation():
+        import os
+        from flask import send_from_directory, current_app
+        
+        # Ruta a la carpeta de documentos oficiales
+        doc_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'official_documents')
+        filename = 'REGLAMENTO_FUROR_Y_PASION.pdf'
+        
+        if not os.path.exists(os.path.join(doc_path, filename)):
+            return jsonify({"error": "Archivo de reglamento no encontrado en el servidor."}), 404
+            
+        return send_from_directory(doc_path, filename)
+
+    @staticmethod
     def create_student():
         data, photo_file, signature_file = StudentController._process_incoming_data()
         user_id = g.current_user_id 
@@ -85,6 +99,16 @@ class StudentController:
             return jsonify({"error": "Estudiante no encontrado o no autorizado"}), 404
         
         return jsonify(student.serialize()), 200
+
+    @staticmethod
+    def get_guardian(student_id):
+        user_id = g.current_user_id
+        guardian_info, errors = StudentService.get_guardian_info(user_id, student_id)
+
+        if errors:
+            return jsonify({"error": errors['general']}), 404
+        
+        return jsonify(guardian_info), 200
 
     @staticmethod
     def update_student(student_id):

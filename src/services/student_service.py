@@ -218,6 +218,24 @@ class StudentService:
         return student, None
 
     @staticmethod
+    def get_guardian_info(user_id, student_id):
+        student = Student.query.filter_by(user_id=user_id, id=student_id).first()
+        if not student:
+            return None, {'general': 'Estudiante no encontrado.'}
+        
+        if not student.is_minor:
+            return None, {'general': 'El estudiante es mayor de edad, no tiene acudiente.'}
+
+        guardian_data = {
+            "fullName": student.guardian_full_name,
+            "documentId": student.guardian_document_id,
+            "phone": student.guardian_phone,
+            "relationship": student.guardian_relationship,
+            "email": student.guardian_email
+        }
+        return guardian_data, None
+
+    @staticmethod
     def delete_student(user_id, student_id):
         student = StudentService.get_student_by_id(user_id, student_id)
         if not student:
