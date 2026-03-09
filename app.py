@@ -14,8 +14,11 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     
-    # Configuración global de CORS (Permite todo para desarrollo)
-    CORS(app, supports_credentials=True)
+    # Configuración global de CORS
+    CORS(app, resources={r"/*": {"origins": ["http://localhost:4200", "http://127.0.0.1:4200"]}}, 
+         supports_credentials=True,
+         allow_headers=["Content-Type", "Authorization"],
+         methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
     
     MailService.init_app(app)
     db.init_app(app)
