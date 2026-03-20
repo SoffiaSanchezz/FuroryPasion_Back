@@ -6,6 +6,10 @@ from functools import wraps
 def jwt_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        # 0. Permitir peticiones OPTIONS para CORS preflight
+        if request.method == 'OPTIONS':
+            return f(*args, **kwargs)
+
         token = None
         
         # 1. Obtener token de los headers

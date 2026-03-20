@@ -12,14 +12,14 @@ class StudentController:
     @staticmethod
     def _process_incoming_data():
         raw_data = request.get_json()
-        data = {} # Initialize data as an empty dict to build up
+        data = {}
         photo_file = None
         signature_file = None
 
         if raw_data is None:
             return {}, None, None
 
-        # Extract photo and signature if present as base64
+        # 1. Procesar Foto Base64
         if 'photo_file_base64' in raw_data and raw_data['photo_file_base64']:
             try:
                 base64_string = raw_data['photo_file_base64'].split(',')[1]
@@ -28,12 +28,31 @@ class StudentController:
             except Exception:
                 pass 
 
-        # Flatten student data and handle face_descriptor
-        data.update(raw_data) # Aplanamos el payload que viene de Angular
+        # 2. Procesar Firma Base64
+        if 'signature_image_base64' in raw_data and raw_data['signature_image_base64']:
+            try:
+                base64_string = raw_data['signature_image_base64'].split(',')[1]
+                sig_data = base64.b64decode(base64_string)
+                signature_file = FileStorage(io.BytesIO(sig_data), filename='signature.png', content_type='image/png')
+            except Exception:
+                pass
+
+        # 3. Aplanar datos (Extraer de 'student' y 'guardian')
+        if 'student' in raw_data:
+            data.update(raw_data['student'])
         
-        # Capture face_descriptor explícitamente
-        if 'face_descriptor' in raw_data:
-            data['face_descriptor'] = raw_data['face_descriptor']
+        if 'guardian' in raw_data and raw_data['guardian']:
+            # Prefijar campos de guardian para que coincidan con el modelo (guardian_full_name, etc)
+            guardian_raw = raw_data['guardian']
+            data['guardian_full_name'] = guardian_raw.get('full_name')
+            data['guardian_document_id'] = guardian_raw.get('document_id')
+            data['guardian_phone'] = guardian_raw.get('phone')
+            data['guardian_relationship'] = guardian_raw.get('relationship')
+            data['guardian_email'] = guardian_raw.get('email')
+
+        # 4. Campos extra
+        data['is_minor'] = raw_data.get('is_minor', False)
+        data['face_descriptor'] = raw_data.get('face_descriptor')
 
         return data, photo_file, signature_file
 
