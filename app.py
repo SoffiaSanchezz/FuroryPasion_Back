@@ -31,8 +31,9 @@ def create_app():
     app.register_blueprint(payment_bp)
     app.register_blueprint(activity_bp)
 
-    # Configuración de subida de archivos
-    UPLOAD_FOLDER = os.path.join(app.root_path, 'uploads')
+    # Configuración de subida de archivos con ruta absoluta
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    UPLOAD_FOLDER = os.path.join(basedir, 'uploads')
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
     
     if not os.path.exists(UPLOAD_FOLDER):
