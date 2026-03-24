@@ -236,12 +236,19 @@ class StudentService:
         return guardian_data, None
 
     @staticmethod
-    def delete_student(user_id, student_id):
-        student = StudentService.get_student_by_id(user_id, student_id)
+    def delete_student(user_id, student_id, permanent=False):
+        student = Student.query.filter_by(user_id=user_id, id=student_id).first()
         if not student:
             return False, {'general': 'Estudiante no encontrado o no autorizado.'}
 
-        student.soft_delete() # Cambia el estado a 'inactivo'
+        if permanent:
+            # Borrado físico si se solicita permanentemente
+            db.session.delete(student)
+        else:
+            # Soft delete tradicional
+            student.soft_delete() # Cambia el estado a 'inactivo'
+        
+        db.session.commit()
         return True, None
 
     @staticmethod

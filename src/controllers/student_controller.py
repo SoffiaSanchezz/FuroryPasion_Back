@@ -162,7 +162,10 @@ class StudentController:
     @staticmethod
     def delete_student(student_id):
         user_id = g.current_user_id
-        success, error = StudentService.delete_student(user_id, student_id)
+        # Capturamos si viene ?permanent=true en la URL
+        permanent = request.args.get('permanent', 'false').lower() == 'true'
+        
+        success, error = StudentService.delete_student(user_id, student_id, permanent)
         if not success:
             return jsonify({"error": error}), 404
         return jsonify({"message": "Estudiante eliminado exitosamente."}), 200
