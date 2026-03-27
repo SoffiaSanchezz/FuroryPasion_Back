@@ -4,7 +4,11 @@ from src.database.db import db
 from src.models.Student import Student
 from src.utils.file_upload_helper import FileUploadHelper
 
+from src.services.mail_service import MailService
+from src.services.contract_service import ContractService
+
 class StudentService:
+    # ... (mantener _calculate_age y _validate_student_data)
     @staticmethod
     def _calculate_age(date_of_birth):
         today = date.today()
@@ -122,6 +126,13 @@ class StudentService:
             photo_path, upload_error = FileUploadHelper.save_photo(photo_file, "student_photos") 
             if upload_error:
                 return None, {'photo': upload_error}
+        
+        # Guardar la firma si se proporciona
+        signature_path = None
+        if signature_file:
+            signature_path, upload_error = FileUploadHelper.save_photo(signature_file, "student_signatures")
+            if upload_error:
+                return None, {'signature': upload_error}
 
         new_student = Student(
             user_id=user_id,
@@ -132,12 +143,39 @@ class StudentService:
             phone=validated_data['phone'],
             address=validated_data['address'],
             photo_path=photo_path,
-            signature_path=None, # Ajustar si se requiere firma
+            signature_path=signature_path,
             face_descriptor=validated_data.get('face_descriptor'),
-            is_minor=validated_data['is_minor']
+            is_minor=validated_data['is_minor'],
+            # Datos de acudiente
+            guardian_full_name=validated_data.get('guardian_full_name'),
+            guardian_document_id=validated_data.get('guardian_document_id'),
+            guardian_phone=validated_data.get('guardian_phone'),
+            guardian_relationship=validated_data.get('guardian_relationship'),
+            guardian_email=validated_data.get('guardian_email')
         )
+        
         db.session.add(new_student)
         db.session.commit()
+
+        # --- Flujo de Correo y Contrato ---
+        try:
+            # 1. Generar el contrato PDF dinámicamente
+            contract_path = ContractService.generate_student_contract(new_student, signature_path)
+            
+            # 2. Enviar el correo de bienvenida
+            # Si es menor, enviamos al correo del acudiente también
+            target_email = new_student.email or new_student.guardian_email
+            if target_email:
+                MailService.send_welcome_email(target_email, new_student, contract_path)
+                
+                # Opcional: Si ambos tienen correos distintos, enviar a ambos
+                if new_student.is_minor and new_student.email and new_student.guardian_email:
+                    MailService.send_welcome_email(new_student.guardian_email, new_student, contract_path)
+        except Exception as e:
+            # No bloqueamos el registro si falla el correo, pero lo logueamos
+            from flask import current_app
+            current_app.logger.error(f"Error en post-registro (PDF/Email): {str(e)}")
+
         return new_student, None
 
     @staticmethod
