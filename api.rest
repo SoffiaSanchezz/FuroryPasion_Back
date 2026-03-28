@@ -1,15 +1,15 @@
-# # // register
-# POST http://127.0.0.1:5000/register
-# Content-Type: application/json
+### // register
+POST  http://127.0.0.1:5000/auth/register
+Content-Type: application/json
 
-# {
-#     "nombre": "Paola",
-#     "apellido": "Sanchez",
-#     "username": "Pao Pao",
-#     "email": "Pao@gmail.com",
-#     "password": "Pao123*",
-#     "rol": "admin"
-# }
+{
+    "nombre": "Sofia",
+    "apellido": "Sanchez",
+    "username": "SofiaSanchez",
+    "email": "Soffia@gmail.com",
+    "password": "Sofia123*",
+    "rol": "admin"
+}
 
 // login
 # POST http://127.0.0.1:5000/login

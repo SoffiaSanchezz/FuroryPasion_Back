@@ -12,14 +12,14 @@ class StudentController:
     @staticmethod
     def _process_incoming_data():
         raw_data = request.get_json()
-        data = {} # Initialize data as an empty dict to build up
+        data = {}
         photo_file = None
         signature_file = None
 
         if raw_data is None:
             return {}, None, None
 
-        # Extract photo and signature if present as base64
+        # 1. Procesar Foto Base64
         if 'photo_file_base64' in raw_data and raw_data['photo_file_base64']:
             try:
                 base64_string = raw_data['photo_file_base64'].split(',')[1]
@@ -28,14 +28,47 @@ class StudentController:
             except Exception:
                 pass 
 
-        # Flatten student data and handle face_descriptor
-        data.update(raw_data) # Aplanamos el payload que viene de Angular
+        # 2. Procesar Firma Base64
+        if 'signature_image_base64' in raw_data and raw_data['signature_image_base64']:
+            try:
+                base64_string = raw_data['signature_image_base64'].split(',')[1]
+                sig_data = base64.b64decode(base64_string)
+                signature_file = FileStorage(io.BytesIO(sig_data), filename='signature.png', content_type='image/png')
+            except Exception:
+                pass
+
+        # 3. Aplanar datos (Extraer de 'student' y 'guardian')
+        if 'student' in raw_data:
+            data.update(raw_data['student'])
         
-        # Capture face_descriptor explícitamente
-        if 'face_descriptor' in raw_data:
-            data['face_descriptor'] = raw_data['face_descriptor']
+        if 'guardian' in raw_data and raw_data['guardian']:
+            # Prefijar campos de guardian para que coincidan con el modelo (guardian_full_name, etc)
+            guardian_raw = raw_data['guardian']
+            data['guardian_full_name'] = guardian_raw.get('full_name')
+            data['guardian_document_id'] = guardian_raw.get('document_id')
+            data['guardian_phone'] = guardian_raw.get('phone')
+            data['guardian_relationship'] = guardian_raw.get('relationship')
+            data['guardian_email'] = guardian_raw.get('email')
+
+        # 4. Campos extra
+        data['is_minor'] = raw_data.get('is_minor', False)
+        data['face_descriptor'] = raw_data.get('face_descriptor')
 
         return data, photo_file, signature_file
+
+    @staticmethod
+    def get_regulation():
+        import os
+        from flask import send_from_directory, current_app
+        
+        # Ruta a la carpeta de documentos oficiales
+        doc_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'official_documents')
+        filename = 'REGLAMENTO_FUROR_Y_PASION.pdf'
+        
+        if not os.path.exists(os.path.join(doc_path, filename)):
+            return jsonify({"error": "Archivo de reglamento no encontrado en el servidor."}), 404
+            
+        return send_from_directory(doc_path, filename)
 
     @staticmethod
     def create_student():
@@ -87,6 +120,16 @@ class StudentController:
         return jsonify(student.serialize()), 200
 
     @staticmethod
+    def get_guardian(student_id):
+        user_id = g.current_user_id
+        guardian_info, errors = StudentService.get_guardian_info(user_id, student_id)
+
+        if errors:
+            return jsonify({"error": errors['general']}), 404
+        
+        return jsonify(guardian_info), 200
+
+    @staticmethod
     def update_student(student_id):
         user_id = g.current_user_id
         data, photo_file, signature_file = StudentController._process_incoming_data() # Use unified processing
@@ -115,3 +158,14 @@ class StudentController:
             return jsonify({"error": errors['general']}), 404
         
         return jsonify(student.serialize()), 200
+
+    @staticmethod
+    def delete_student(student_id):
+        user_id = g.current_user_id
+        # Capturamos si viene ?permanent=true en la URL
+        permanent = request.args.get('permanent', 'false').lower() == 'true'
+        
+        success, error = StudentService.delete_student(user_id, student_id, permanent)
+        if not success:
+            return jsonify({"error": error}), 404
+        return jsonify({"message": "Estudiante eliminado exitosamente."}), 200

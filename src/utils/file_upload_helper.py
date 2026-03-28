@@ -35,8 +35,9 @@ class FileUploadHelper:
         filepath_on_server = os.path.join(upload_dir_on_server, filename)
         file.save(filepath_on_server)
         
-        # Devolver la ruta relativa a la URL base para el frontend
-        relative_url_path = os.path.join(FileUploadHelper.UPLOAD_FOLDER, specific_subfolder, filename)
+        # Devolver la ruta relativa (sin incluir la carpeta base 'uploads')
+        # Esto evita rutas tipo uploads/uploads/... en el frontend
+        relative_url_path = f"{specific_subfolder}/{filename}"
         return relative_url_path, None
 
     @staticmethod
