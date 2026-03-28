@@ -1,0 +1,116 @@
+# furorypasion-back/templates/emails/activity_invitation.html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Invitación a Actividad</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background-color: #B11226; /* Primary color */
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 20px;
+            color: #333333;
+            line-height: 1.6;
+        }
+        .content p {
+            margin: 0 0 10px;
+        }
+        .activity-details {
+            background-color: #f9f9f9;
+            border-left: 5px solid #E3B23C; /* Accent color */
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .activity-details h2 {
+            color: #B11226;
+            margin-top: 0;
+            font-size: 20px;
+        }
+        .activity-details ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .activity-details ul li {
+            margin-bottom: 5px;
+        }
+        .activity-image {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .activity-image img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+        .footer {
+            background-color: #eeeeee;
+            color: #777777;
+            padding: 15px;
+            text-align: center;
+            font-size: 12px;
+            border-top: 1px solid #dddddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>¡Estás invitado a una actividad!</h1>
+        </div>
+        <div class="content">
+            <p>Hola,</p>
+            <p>Te extendemos una cordial invitación a la siguiente actividad organizada por <strong>Furor y Pasión Escuela de Danza</strong>:</p>
+
+            <div class="activity-details">
+                <h2>{{ activity.title }}</h2>
+                <ul>
+                    <li><strong>Fecha:</strong> {{ activity.eventDate }}</li>
+                    <li><strong>Hora:</strong> {{ activity.eventTime }}</li>
+                    {% if activity.description %}
+                    <li><strong>Descripción:</strong> {{ activity.description }}</li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            {% if activity.imagePath %}
+            <div class="activity-image">
+                <img src="{{ base_url }}/{{ activity.imagePath }}" alt="Imagen de la actividad" style="max-width: 100%; height: auto;">
+            </div>
+            {% endif %}
+
+            <p>Esperamos contar con tu presencia.</p>
+            <p>Saludos cordiales,</p>
+            <p>El equipo de Furor y Pasión</p>
+        </div>
+        <div class="footer">
+            <p>&copy; {{ current_year }} Furor y Pasión Escuela de Danza. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</body>
+</html>

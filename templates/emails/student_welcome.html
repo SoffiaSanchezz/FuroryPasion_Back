@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>¡Bienvenido a Furor y Pasión!</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; overflow: hidden; }
+        .header { background: #B11226; color: white; padding: 30px; text-align: center; }
+        .content { padding: 30px; }
+        .footer { background: #f9f9f9; padding: 20px; text-align: center; font-size: 0.8em; color: #777; }
+        .button { display: inline-block; padding: 12px 25px; background: #B11226; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .rules-preview { background: #fff8f8; border-left: 4px solid #B11226; padding: 15px; margin: 20px 0; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>¡Hola, {{ student.full_name }}!</h1>
+            <p>Es un gusto tenerte con nosotros</p>
+        </div>
+        <div class="content">
+            <p>Te damos la más cordial bienvenida a <strong>Furor y Pasión Escuela de Danza</strong>. Estamos emocionados de acompañarte en este proceso artístico.</p>
+            
+            <p>Adjunto a este correo encontrarás tu <strong>Contrato de Afiliación</strong> debidamente firmado digitalmente, el cual incluye las normas y compromisos de nuestra institución.</p>
+
+            <div class="rules-preview">
+                <strong>Información Importante:</strong>
+                <ul>
+                    <li>Los pagos se deben realizar el mismo día de inicio de cada mes.</li>
+                    <li>La puntualidad es clave: llegar más de 10 minutos tarde conlleva sanciones.</li>
+                    <li>Cualquier restricción médica debe ser informada inmediatamente.</li>
+                </ul>
+            </div>
+
+            <p>Si tienes alguna duda, puedes contactarnos a través de este medio o por WhatsApp.</p>
+            
+            <p>¡Nos vemos en la academia!</p>
+        </div>
+        <div class="footer">
+            <p>&copy; {{ current_year }} Furor y Pasión Escuela de Danza<br>Calle 10 N 3a – 42</p>
+        </div>
+    </div>
+</body>
+</html>

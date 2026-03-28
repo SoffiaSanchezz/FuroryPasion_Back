@@ -1,23 +1,23 @@
-# # // register
-# POST http://127.0.0.1:5000/register
-# Content-Type: application/json
+### // register
+POST  http://127.0.0.1:5000/auth/register
+Content-Type: application/json
 
-# {
-#     "nombre": "Paola",
-#     "apellido": "Sanchez",
-#     "username": "Pao Pao",
-#     "email": "Pao@gmail.com",
-#     "password": "Pao123*",
-#     "rol": "admin"
-# }
+{
+    "nombre": "Sofia",
+    "apellido": "Sanchez",
+    "username": "SofiaSanchez",
+    "email": "Soffia@gmail.com",
+    "password": "Sofia123*",
+    "rol": "admin"
+}
 
-# // login
+// login
 # POST http://127.0.0.1:5000/login
 # Content-Type: application/json
 
 # {
-#     "identifier": "Pao@gmail.com",
-#     "password": "Pao123*"
+#     "identifier": "pao02@gmail.com",
+#     "password": "Paola123*"
 # }
 
 # //Studients 
@@ -43,19 +43,109 @@
 # eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzY5ODQ2MjIwLCJleHAiOjE3Njk4NDgwMjAsInJvbCI6InVzdWFyaW8ifQ.ntXpaUSy_GPA7UYMeIA6RFZKdN2GMotuBF3omtN-9iI
 
 ### CREATE STUDENT
-POST http://127.0.0.1:5000/students
+# POST http://127.0.0.1:5000/students
+# Content-Type: application/json
+# Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzY5ODgyNDQyLCJleHAiOjE3Njk5Njg4NDIsInJvbCI6ImVzdHVkaWFudGUifQ.Qxvoc8pRJdp8mqTO1YX0OBgaj7LX2BUup_glUMd3jQM
+
+# {
+#   "full_name": "Juan Perez",
+#   "document_id": "1001001001",
+#   "date_of_birth": "2000-01-01",
+#   "email": "juan.perez@example.com",
+#   "phone": "+34600123456",
+#   "address": "Calle Falsa 123, Madrid",
+#   "medical_conditions": "Ninguna",
+#   "allergies": "Polen",
+#   "emergency_contact_name": "Maria Perez",
+#   "emergency_contact_phone": "+34600987654"
+# }
+
+
+### GET STUDENT
+GET http://127.0.0.1:5000/students
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzY5ODgyNDQyLCJleHAiOjE3Njk5Njg4NDIsInJvbCI6ImVzdHVkaWFudGUifQ.Qxvoc8pRJdp8mqTO1YX0OBgaj7LX2BUup_glUMd3jQM
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1IiwiaWF0IjoxNzcwNjk1ODM3LCJleHAiOjE3NzA3ODIyMzcsInJvbCI6IkFkbWluIn0.znkZJdDr3rpmqi7Ey2MiWz7Zy0a2ZFjGh6o1q22I6_A
+
+# --- Endpoints para Horarios (Schedules) ---
+
+### CREATE SCHEDULE
+POST http://127.0.0.1:5000/schedules
+Content-Type: application/json
+Authorization: Bearer <TU_TOKEN_JWT_AQUI>
 
 {
-  "full_name": "Juan Perez",
-  "document_id": "1001001001",
-  "date_of_birth": "2000-01-01",
-  "email": "juan.perez@example.com",
-  "phone": "+34600123456",
-  "address": "Calle Falsa 123, Madrid",
-  "medical_conditions": "Ninguna",
-  "allergies": "Polen",
-  "emergency_contact_name": "Maria Perez",
-  "emergency_contact_phone": "+34600987654"
+  "name": "Salsa Nivel 1",
+  "teacherName": "Prof. Juan Pérez",
+  "startTime": "18:00",
+  "endTime": "19:00",
+  "day": "Lunes"
 }
+
+### GET ALL SCHEDULES
+GET http://127.0.0.1:5000/schedules
+Content-Type: application/json
+Authorization: Bearer <TU_TOKEN_JWT_AQUI>
+
+### GET SCHEDULE BY ID
+GET http://127.0.0.1:5000/schedules/1
+Content-Type: application/json
+Authorization: Bearer <TU_TOKEN_JWT_AQUI>
+
+### GET SCHEDULES BY DAY
+GET http://127.0.0.1:5000/schedules/day/Lunes
+Content-Type: application/json
+Authorization: Bearer <TU_TOKEN_JWT_AQUI>
+
+### UPDATE SCHEDULE
+PUT http://127.0.0.1:5000/schedules/1
+Content-Type: application/json
+Authorization: Bearer <TU_TOKEN_JWT_AQUI>
+
+{
+  "name": "Salsa Nivel Intermedio",
+  "teacherName": "Prof. Juan Pérez",
+  "startTime": "18:00",
+  "endTime": "19:30",
+  "day": "Lunes"
+}
+
+### DELETE SCHEDULE
+DELETE http://127.0.0.1:5000/schedules/1
+Content-Type: application/json
+Authorization: Bearer <TU_TOKEN_JWT_AQUI>
+
+
+# --- Endpoints para Registros de Asistencia (Attendance) ---
+
+### RECORD ATTENDANCE
+POST http://127.0.0.1:5000/attendance
+Content-Type: application/json
+Authorization: Bearer <TU_TOKEN_JWT_AQUI>
+
+{
+  "studentId": "1",
+  "classScheduleId": "1",
+  "arrivalTime": "2026-02-20T18:05:00Z",
+  "status": "presente",
+  "notes": "Llegó a tiempo y con energía."
+}
+
+### GET ALL ATTENDANCE RECORDS
+GET http://127.0.0.1:5000/attendance
+Content-Type: application/json
+Authorization: Bearer <TU_TOKEN_JWT_AQUI>
+
+### GET ATTENDANCE RECORDS BY CLASS ID
+GET http://127.0.0.1:5000/attendance/class/1
+Content-Type: application/json
+Authorization: Bearer <TU_TOKEN_JWT_AQUI>
+
+### GET ATTENDANCE RECORDS BY STUDENT ID
+GET http://127.0.0.1:5000/attendance/student/1
+Content-Type: application/json
+Authorization: Bearer <TU_TOKEN_JWT_AQUI>
+
+### GET ATTENDANCE RECORDS BY DATE
+GET http://127.0.0.1:5000/attendance/date/2026-02-20
+Content-Type: application/json
+Authorization: Bearer <TU_TOKEN_JWT_AQUI>
