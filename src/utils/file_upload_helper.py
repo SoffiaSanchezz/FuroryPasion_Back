@@ -3,7 +3,7 @@ from werkzeug.utils import secure_filename
 from flask import current_app
 
 class FileUploadHelper:
-    UPLOAD_FOLDER = 'uploads/student_photos'
+    UPLOAD_FOLDER = 'uploads' # Cambiado a solo 'uploads'
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
     MAX_FILE_SIZE = 2 * 1024 * 1024  # 2 MB
 
@@ -13,7 +13,7 @@ class FileUploadHelper:
                filename.rsplit('.', 1)[1].lower() in FileUploadHelper.ALLOWED_EXTENSIONS
 
     @staticmethod
-    def save_photo(file, subfolder=None):
+    def save_photo(file, specific_subfolder): # Renombrado el parámetro para mayor claridad
         if not file:
             return None, "No se ha proporcionado ningún archivo."
 
@@ -28,25 +28,46 @@ class FileUploadHelper:
         
         filename = secure_filename(file.filename)
         
-        base_upload_path = os.path.join(current_app.root_path, FileUploadHelper.UPLOAD_FOLDER)
-        if subfolder:
-            upload_path = os.path.join(base_upload_path, subfolder)
-        else:
-            upload_path = base_upload_path
-            
-        os.makedirs(upload_path, exist_ok=True)
+        # Construir la ruta completa en el sistema de archivos del servidor
+        upload_dir_on_server = os.path.join(current_app.root_path, FileUploadHelper.UPLOAD_FOLDER, specific_subfolder)
+        os.makedirs(upload_dir_on_server, exist_ok=True)
         
-        filepath = os.path.join(upload_path, filename)
-        file.save(filepath)
+        filepath_on_server = os.path.join(upload_dir_on_server, filename)
+        file.save(filepath_on_server)
         
-        # Return path relative to app root or base_upload_path as needed by get_photo_url
-        if subfolder:
-            return os.path.join(FileUploadHelper.UPLOAD_FOLDER, subfolder, filename), None
-        else:
-            return os.path.join(FileUploadHelper.UPLOAD_FOLDER, filename), None
+        # Devolver la ruta relativa (sin incluir la carpeta base 'uploads')
+        # Esto evita rutas tipo uploads/uploads/... en el frontend
+        relative_url_path = f"{specific_subfolder}/{filename}"
+        return relative_url_path, None
 
     @staticmethod
     def get_photo_url(photo_path):
         if photo_path:
-            return f"{current_app.config['BASE_URL']}/{photo_path}" # Asumiendo que BASE_URL está configurada
+            # Asegurarse de que BASE_URL esté configurada en el config de Flask
+            base_url = current_app.config.get('BASE_URL')
+            if not base_url:
+                # Fallback para desarrollo: usar la URL base de la solicitud actual
+                from flask import request
+                base_url = request.url_root.rstrip('/')
+            return f"{base_url}/{photo_path}"
         return None
+
+    @staticmethod
+    def delete_file(file_path):
+        """
+        Elimina un archivo del sistema de archivos del servidor.
+        file_path es la ruta relativa devuelta por save_photo.
+        """
+        if not file_path:
+            return False, "Ruta de archivo no proporcionada."
+
+        abs_file_path = os.path.join(current_app.root_path, file_path)
+        
+        if os.path.exists(abs_file_path):
+            try:
+                os.remove(abs_file_path)
+                return True, None
+            except Exception as e:
+                return False, f"Error al eliminar el archivo: {e}"
+        else:
+            return False, "El archivo no existe."
