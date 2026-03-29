@@ -28,8 +28,8 @@ class FileUploadHelper:
         
         filename = secure_filename(file.filename)
         
-        # Construir la ruta completa en el sistema de archivos del servidor
-        upload_dir_on_server = os.path.join(current_app.root_path, FileUploadHelper.UPLOAD_FOLDER, specific_subfolder)
+        # Construir la ruta completa usando la configuración de la app
+        upload_dir_on_server = os.path.join(current_app.config['UPLOAD_FOLDER'], specific_subfolder)
         os.makedirs(upload_dir_on_server, exist_ok=True)
         
         filepath_on_server = os.path.join(upload_dir_on_server, filename)
@@ -61,7 +61,7 @@ class FileUploadHelper:
         if not file_path:
             return False, "Ruta de archivo no proporcionada."
 
-        abs_file_path = os.path.join(current_app.root_path, file_path)
+        abs_file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], file_path)
         
         if os.path.exists(abs_file_path):
             try:

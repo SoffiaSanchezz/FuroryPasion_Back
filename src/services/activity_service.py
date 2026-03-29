@@ -80,7 +80,7 @@ class ActivityService:
             if new_activity.image_path:
                 from flask import current_app # Import here to avoid circular dependency
                 import os # Import os here as well
-                image_attachment_path = os.path.join(current_app.root_path, new_activity.image_path)
+                image_attachment_path = os.path.join(current_app.config['UPLOAD_FOLDER'], new_activity.image_path)
             
             MailService.send_invitation_email(recipient_emails, activity_data, image_attachment_path)
         
@@ -136,7 +136,7 @@ class ActivityService:
             if activity.image_path:
                 from flask import current_app
                 import os # Import os here as well
-                image_attachment_path = os.path.join(current_app.root_path, activity.image_path)
+                image_attachment_path = os.path.join(current_app.config['UPLOAD_FOLDER'], activity.image_path)
             MailService.send_invitation_email(recipient_emails, activity_data, image_attachment_path)
         
         return activity, None
