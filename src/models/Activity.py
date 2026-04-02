@@ -24,6 +24,17 @@ class Activity(db.Model):
         return f'<Activity {self.title} on {self.event_date} at {self.event_time}>'
 
     def serialize(self):
+        # Limpiar la ruta de la imagen para el frontend
+        image_path = self.image_path
+        if image_path:
+            # Reemplazar contra barras por barras normales (para Windows)
+            image_path = image_path.replace('\\', '/')
+            # Eliminar prefijo 'uploads/' si existe accidentalmente en la DB
+            if image_path.startswith('uploads/'):
+                image_path = image_path[8:]
+            elif image_path.startswith('/uploads/'):
+                image_path = image_path[9:]
+
         return {
             "id": str(self.id),
             "userId": str(self.user_id),
@@ -31,7 +42,7 @@ class Activity(db.Model):
             "description": self.description,
             "eventDate": self.event_date.isoformat(),
             "eventTime": self.event_time,
-            "imagePath": self.image_path,
+            "imagePath": image_path,
             "invitedEmails": json.loads(self.invited_emails) if self.invited_emails else [],
             "createdAt": self.created_at.isoformat(),
             "updatedAt": self.updated_at.isoformat()

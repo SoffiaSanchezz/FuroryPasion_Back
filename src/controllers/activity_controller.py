@@ -37,6 +37,8 @@ class ActivityController:
             try:
                 base64_string = data['image_file_base64'].split(',')[1]
                 image_data = base64.b64decode(base64_string)
+                # Note: filename 'image.png' is just a placeholder, 
+                # FileUploadHelper.save_photo will generate a unique UUID name.
                 image_file = FileStorage(io.BytesIO(image_data), filename='image.png', content_type='image/png')
             except Exception as e:
                 return {}, None, {"errors": f"Error al procesar la imagen base64: {e}"}, 400
