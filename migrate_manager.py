@@ -39,6 +39,7 @@ with app.app_context():
     from src.models.Schedule import Schedule # Add this
     from src.models.Attendance import Attendance # Add this
     from src.models.Payment import Payment # Add this
+    from src.models.Installment import Installment # Add this
     from src.models.Activity import Activity # Add this
 
 if __name__ == '__main__':

@@ -8,7 +8,7 @@ def jwt_required(f):
     def decorated_function(*args, **kwargs):
         # 0. Permitir peticiones OPTIONS para CORS preflight inmediatamente
         if request.method == 'OPTIONS':
-            return '', 204
+            return '', 200
 
         token = None
         

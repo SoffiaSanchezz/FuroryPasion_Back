@@ -26,6 +26,7 @@ class Payment(db.Model):
 
     user = db.relationship('User', backref='payments', lazy=True)
     student = db.relationship('Student', backref='payments', lazy=True)
+    installments = db.relationship('Installment', backref='payment', lazy=True, cascade="all, delete-orphan")
 
     def __repr__(self):
         return f'<Payment {self.receipt_id} - Student:{self.student_id}>'
@@ -33,8 +34,8 @@ class Payment(db.Model):
     def serialize(self):
         # Calcular status, pendingBalance y planStatus en el backend para consistencia
         total_value = self.total_value
-        amount_paid = self.amount_paid
-        pending_balance = total_value - amount_paid
+        amount_paid = sum(inst.amount for inst in self.installments) if self.installments else self.amount_paid
+        pending_balance = max(0, total_value - amount_paid)
         status = 'completed' if pending_balance <= 0 else 'partial'
 
         today = datetime.utcnow().date()
@@ -45,13 +46,13 @@ class Payment(db.Model):
             plan_status = 'expiring_soon'
 
         return {
-            "id": str(self.id), # El frontend espera string para el ID
+            "id": str(self.id),
             "userId": str(self.user_id),
             "studentId": str(self.student_id),
-            "studentName": self.student.full_name if self.student else "Desconocido", # Necesario para el frontend
+            "studentName": self.student.full_name if self.student else "Desconocido",
             "planAcquired": self.plan_acquired,
             "totalValue": self.total_value,
-            "amountPaid": self.amount_paid,
+            "amountPaid": amount_paid,
             "paymentMethod": self.payment_method,
             "startDate": self.start_date.isoformat(),
             "endDate": self.end_date.isoformat(),
@@ -59,6 +60,7 @@ class Payment(db.Model):
             "status": status,
             "pendingBalance": pending_balance,
             "planStatus": plan_status,
+            "installments": [inst.serialize() for inst in self.installments],
             "createdAt": self.created_at.isoformat(),
             "updatedAt": self.updated_at.isoformat()
         }
