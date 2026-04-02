@@ -18,7 +18,9 @@ def create_app():
     CORS(app, resources={r"/*": {
         "origins": ["http://localhost:4200", "http://127.0.0.1:4200"],
         "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization", "x-access-token"]
+        "allow_headers": ["Content-Type", "Authorization", "x-access-token", "Accept"],
+        "expose_headers": ["Content-Type", "Authorization"],
+        "max_age": 3600
     }}, supports_credentials=True)
     
     MailService.init_app(app)

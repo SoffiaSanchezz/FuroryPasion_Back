@@ -27,6 +27,16 @@ class PaymentController:
         return jsonify(payment.serialize()), 200
     
     @staticmethod
+    def add_installment(payment_id):
+        data = request.get_json()
+        user_id = g.current_user_id
+        
+        payment, errors = PaymentService.add_installment(user_id, payment_id, data)
+        if errors:
+            return jsonify({"errors": errors}), 400
+        return jsonify(payment.serialize()), 201
+    
+    @staticmethod
     def get_payments_by_student(student_id):
         user_id = g.current_user_id
         payments = PaymentService.get_payments_by_student(user_id, student_id)

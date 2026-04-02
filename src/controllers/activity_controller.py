@@ -35,11 +35,11 @@ class ActivityController:
         # Process base64 image if present (alternative to multipart)
         if 'image_file_base64' in data and data['image_file_base64']:
             try:
-                import uuid
                 base64_string = data['image_file_base64'].split(',')[1]
                 image_data = base64.b64decode(base64_string)
-                filename = f"{uuid.uuid4()}.png"
-                image_file = FileStorage(io.BytesIO(image_data), filename=filename, content_type='image/png')
+                # Note: filename 'image.png' is just a placeholder, 
+                # FileUploadHelper.save_photo will generate a unique UUID name.
+                image_file = FileStorage(io.BytesIO(image_data), filename='image.png', content_type='image/png')
             except Exception as e:
                 return {}, None, {"errors": f"Error al procesar la imagen base64: {e}"}, 400
         

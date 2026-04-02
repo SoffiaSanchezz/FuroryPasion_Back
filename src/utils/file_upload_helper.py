@@ -26,7 +26,10 @@ class FileUploadHelper:
         if len(file_content) > FileUploadHelper.MAX_FILE_SIZE:
             return None, f"El tamaño del archivo excede el límite de {FileUploadHelper.MAX_FILE_SIZE / (1024 * 1024)} MB."
         
-        filename = secure_filename(file.filename)
+        # Generar un nombre único usando UUID para evitar sobrescritura
+        import uuid
+        extension = file.filename.rsplit('.', 1)[1].lower()
+        filename = f"{uuid.uuid4()}.{extension}"
         
         # Construir la ruta completa usando la configuración de la app
         upload_dir_on_server = os.path.join(current_app.config['UPLOAD_FOLDER'], specific_subfolder)
