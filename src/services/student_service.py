@@ -84,25 +84,20 @@ class StudentService:
             data['guardian_relationship'] = None
             data['guardian_email'] = None
         
-        # Validación Senior: Integridad Biométrica
+        # Validación de biometría facial (opcional — no bloquea el registro)
         descriptor = data.get('face_descriptor')
         if descriptor:
             try:
-                # Si es string, intentar parsear
                 if isinstance(descriptor, str):
                     import json
                     descriptor = json.loads(descriptor)
-                
-                # Validar tipo y longitud
                 if not isinstance(descriptor, list) or len(descriptor) != 128:
-                    errors['face_descriptor'] = f'El descriptor facial debe ser una lista de 128 elementos. Recibido: {type(descriptor)} con longitud {len(descriptor) if isinstance(descriptor, list) else "N/A"}'
+                    errors['face_descriptor'] = f'El descriptor facial debe ser una lista de 128 elementos.'
                 else:
                     import json
                     data['face_descriptor'] = json.dumps(descriptor)
             except Exception as e:
                 errors['face_descriptor'] = f'Error al procesar biometría: {str(e)}'
-        else:
-            errors['face_descriptor'] = 'La biometría facial es obligatoria.'
         
         data['is_minor'] = is_minor_from_data
         return errors, data

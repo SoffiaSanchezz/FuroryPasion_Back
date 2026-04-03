@@ -10,7 +10,18 @@ class NotificationService:
 
     @staticmethod
     def get_notifications(user_id: int) -> list:
-        """Devuelve todas las notificaciones del usuario, más recientes primero."""
+        """Devuelve solo las notificaciones NO leídas del usuario, más recientes primero."""
+        return (
+            Notification.query
+            .filter_by(user_id=user_id, is_read=False)
+            .order_by(Notification.created_at.desc())
+            .limit(50)
+            .all()
+        )
+
+    @staticmethod
+    def get_all_notifications(user_id: int) -> list:
+        """Devuelve todas (leídas y no leídas), para la página completa."""
         return (
             Notification.query
             .filter_by(user_id=user_id)
@@ -85,19 +96,25 @@ class NotificationService:
         )
 
     @staticmethod
-    def notify_new_payment(user_id: int, payment: Payment):
+    def notify_new_payment(user_id: int, payment: Payment, amount: float = None):
         existing = Notification.query.filter_by(
             user_id=user_id, source_type='payment', source_id=payment.id
         ).first()
         if existing:
             return
-        amount = payment.amount_paid
+        # Calcular el monto real sumando los abonos, o usar el pasado explícitamente
+        if amount is None:
+            try:
+                amount = sum(inst.amount for inst in payment.installments) if payment.installments else payment.amount_paid
+            except Exception:
+                amount = payment.amount_paid or 0
+        paid = amount or 0
         NotificationService.create(
             user_id=user_id,
             type='payment',
             icon='bi-cash-stack',
             title='Pago Recibido',
-            description=f'Recibo #{payment.receipt_id} procesado exitosamente (${amount:,.2f}).',
+            description=f'Recibo #{payment.receipt_id} procesado exitosamente (${paid:,.2f}).',
             source_type='payment',
             source_id=payment.id
         )
@@ -123,19 +140,20 @@ class NotificationService:
     def sync_notifications(user_id: int):
         """
         Sincroniza notificaciones desde los datos existentes.
-        Útil para poblar la tabla la primera vez o en cada login.
+        Idempotente: usa source_type+source_id para evitar duplicados.
+        Se puede llamar en cualquier momento.
         """
         students = Student.query.filter_by(user_id=user_id).order_by(
-            Student.created_at.desc()).limit(10).all()
+            Student.created_at.desc()).limit(20).all()
         for s in students:
             NotificationService.notify_new_student(user_id, s)
 
         payments = Payment.query.filter_by(user_id=user_id).order_by(
-            Payment.created_at.desc()).limit(10).all()
+            Payment.created_at.desc()).limit(20).all()
         for p in payments:
             NotificationService.notify_new_payment(user_id, p)
 
         activities = Activity.query.filter_by(user_id=user_id).order_by(
-            Activity.created_at.desc()).limit(10).all()
+            Activity.created_at.desc()).limit(20).all()
         for a in activities:
             NotificationService.notify_new_activity(user_id, a)

@@ -1,18 +1,10 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint
 from src.controllers.notification_controller import NotificationController
 from src.middleware.jwt import jwt_required
 
 notification_bp = Blueprint('notifications', __name__)
 
 
-# ── Preflight handler global para este blueprint ──────────────────────
-@notification_bp.route('/notifications', methods=['OPTIONS'])
-@notification_bp.route('/notifications/<path:subpath>', methods=['OPTIONS'])
-def notifications_preflight(subpath=None):
-    return '', 204
-
-
-# ── Endpoints reales ──────────────────────────────────────────────────
 @notification_bp.route('/notifications', methods=['GET'])
 @jwt_required
 def get_notifications():

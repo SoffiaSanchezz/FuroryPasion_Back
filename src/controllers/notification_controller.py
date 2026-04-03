@@ -1,6 +1,5 @@
-from flask import jsonify, g
+from flask import jsonify, g, current_app
 from src.services.notification_service import NotificationService
-from src.models.Notification import Notification
 
 
 class NotificationController:
@@ -9,13 +8,19 @@ class NotificationController:
     def get_all():
         user_id = g.current_user_id
 
-        # Solo sincroniza si el usuario no tiene notificaciones aún (primera vez)
-        has_any = Notification.query.filter_by(user_id=user_id).first()
-        if not has_any:
+        # Sincroniza siempre — idempotente por source_type+source_id
+        # Detecta nuevos pagos/estudiantes/actividades sin notificación aún
+        try:
             NotificationService.sync_notifications(user_id)
+        except Exception as e:
+            current_app.logger.error(f"sync_notifications falló para user {user_id}: {e}")
 
+        # Solo devuelve NO leídas — las leídas no reaparecen
         notifications = NotificationService.get_notifications(user_id)
-        unread = NotificationService.get_unread_count(user_id)
+        unread = len(notifications)
+
+        current_app.logger.debug(f"GET /notifications user={user_id} → {unread} no leídas")
+
         return jsonify({
             "notifications": [n.serialize() for n in notifications],
             "unreadCount": unread

@@ -106,10 +106,10 @@ class PaymentService:
         
         db.session.commit()
 
-        # Crear notificación automática
+        # Crear notificación automática — pasar el monto del data (antes del recálculo)
         try:
             from src.services.notification_service import NotificationService
-            NotificationService.notify_new_payment(user_id, new_payment)
+            NotificationService.notify_new_payment(user_id, new_payment, amount=float(data['amountPaid']))
         except Exception as e:
             from flask import current_app
             current_app.logger.warning(f"No se pudo crear notificación de pago: {e}")
