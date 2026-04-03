@@ -105,6 +105,15 @@ class PaymentService:
         db.session.add(first_installment)
         
         db.session.commit()
+
+        # Crear notificación automática
+        try:
+            from src.services.notification_service import NotificationService
+            NotificationService.notify_new_payment(user_id, new_payment)
+        except Exception as e:
+            from flask import current_app
+            current_app.logger.warning(f"No se pudo crear notificación de pago: {e}")
+
         return new_payment, None
 
     @staticmethod
