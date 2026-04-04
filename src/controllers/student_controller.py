@@ -54,6 +54,13 @@ class StudentController:
         data['is_minor'] = raw_data.get('is_minor', False)
         data['face_descriptor'] = raw_data.get('face_descriptor')
 
+        # 5. Si no viene face_descriptor pero sí foto, extraerlo automáticamente
+        if not data['face_descriptor'] and raw_data.get('photo_file_base64'):
+            from src.services.face_recognition_service import FaceRecognitionService
+            descriptor, error = FaceRecognitionService.extract_descriptor(raw_data['photo_file_base64'])
+            if descriptor:
+                data['face_descriptor'] = descriptor  # lista de 128 floats
+
         return data, photo_file, signature_file
 
     @staticmethod
@@ -78,8 +85,7 @@ class StudentController:
         # Validación Senior: Evitar procesar si falta biometría
         if not data.get('face_descriptor'):
             return jsonify({
-                "error": "Falta registro biométrico",
-                "message": "Debe realizar el escaneo facial antes de afiliar."
+                "error": "No se detectó ningún rostro en la foto proporcionada. Por favor, tome una foto con buena iluminación y asegúrese de que el rostro sea visible."
             }), 400
 
         try:
@@ -169,3 +175,47 @@ class StudentController:
         if not success:
             return jsonify({"error": error}), 404
         return jsonify({"message": "Estudiante eliminado exitosamente."}), 200
+
+    @staticmethod
+    def verify_photo():
+        """
+        POST /students/verify-photo
+        Recibe una imagen base64 y verifica si corresponde a un estudiante registrado.
+        Retorna match_percentage y accepted (True si supera el umbral).
+        """
+        data = request.get_json()
+        image_b64 = data.get("photo_file_base64")
+
+        if not image_b64:
+            return jsonify({"error": "Se requiere el campo 'photo_file_base64'."}), 400
+
+        from src.services.face_recognition_service import FaceRecognitionService
+        student, confidence, error = FaceRecognitionService.identify_student(image_b64)
+
+        if error:
+            # No se encontró coincidencia o no hay biometría registrada
+            return jsonify({
+                "match_percentage": 0,
+                "accepted": False,
+                "message": error
+            }), 200
+
+        accepted = confidence >= 60  # Umbral: 60% de similitud
+
+        return jsonify({
+            "match_percentage": confidence,
+            "accepted": accepted,
+            "student_id": student.id,
+            "student_name": student.full_name,
+            "message": f"{confidence}% de coincidencia"
+        }), 200
+
+    @staticmethod
+    def check_document(document_id):
+        """
+        GET /students/check-document/<document_id>
+        Verifica si ya existe un estudiante con ese documento de identidad.
+        """
+        from src.models.Student import Student
+        exists = Student.query.filter_by(document_id=document_id).first() is not None
+        return jsonify({"exists": exists}), 200

@@ -1,4 +1,4 @@
-from flask import request, current_app, g, jsonify
+from flask import request, current_app, g, jsonify, make_response
 import jwt
 from datetime import datetime, timedelta
 from functools import wraps
@@ -6,9 +6,10 @@ from functools import wraps
 def jwt_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # 0. Permitir peticiones OPTIONS para CORS preflight inmediatamente
+        # 0. Permitir peticiones OPTIONS para CORS preflight — la vista ya responde,
+        #    pero si llega aquí igual dejamos pasar sin validar token.
         if request.method == 'OPTIONS':
-            return '', 200
+            return f(*args, **kwargs)
 
         token = None
         
@@ -70,8 +71,6 @@ def jwt_required(f):
                 f"Token válido para usuario: {g.current_user_id}"
             )
             
-            return f(*args, **kwargs)
-            
         except jwt.ExpiredSignatureError:
             current_app.logger.warning("Token JWT expirado (ExpiredSignatureError)")
             return jsonify({
@@ -88,12 +87,15 @@ def jwt_required(f):
                 'details': str(e)
             }), 401
         except Exception as e:
-            current_app.logger.error(f"Error inesperado al verificar token: {str(e)}")
+            import traceback
+            current_app.logger.error(f"Error inesperado al verificar token: {str(e)}\n{traceback.format_exc()}")
             return jsonify({
                 'success': False,
                 'error': 'Error interno del servidor',
                 'code': 'server_error'
             }), 500
+
+        return f(*args, **kwargs)
             
     return decorated_function
 
