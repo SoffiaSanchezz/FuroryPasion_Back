@@ -16,8 +16,17 @@ def create_app():
     app.config.from_object(Config)
     
     # Configuración global de CORS reforzada
+    allowed_origins = [
+        "http://localhost:4200",
+        "http://127.0.0.1:4200",
+        "https://localhost",
+        "http://localhost",
+        "capacitor://localhost",
+        "ionic://localhost",
+    ]
+
     CORS(app, resources={r"/*": {
-        "origins": ["http://localhost:4200", "http://127.0.0.1:4200"],
+        "origins": allowed_origins,
         "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization", "x-access-token", "Accept"],
         "expose_headers": ["Content-Type", "Authorization"],
@@ -30,7 +39,6 @@ def create_app():
     @app.after_request
     def add_cors_headers(response):
         origin = request.headers.get('Origin')
-        allowed_origins = ['http://localhost:4200', 'http://127.0.0.1:4200']
         if origin in allowed_origins:
             response.headers['Access-Control-Allow-Origin'] = origin
             response.headers['Access-Control-Allow-Credentials'] = 'true'
