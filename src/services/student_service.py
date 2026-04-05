@@ -167,20 +167,21 @@ class StudentService:
 
         # --- Flujo de Correo y Contrato ---
         try:
-            # 1. Generar el contrato PDF dinámicamente
             contract_path = ContractService.generate_student_contract(new_student, signature_path)
-            
-            # 2. Enviar el correo de bienvenida
-            # Si es menor, enviamos al correo del acudiente también
+
+            student_dict = {
+                'full_name': new_student.full_name,
+                'email': new_student.email,
+                'document_id': new_student.document_id,
+            }
+
             target_email = new_student.email or new_student.guardian_email
             if target_email:
-                MailService.send_welcome_email(target_email, new_student, contract_path)
-                
-                # Opcional: Si ambos tienen correos distintos, enviar a ambos
+                MailService.send_welcome_email(target_email, student_dict, contract_path)
+
                 if new_student.is_minor and new_student.email and new_student.guardian_email:
-                    MailService.send_welcome_email(new_student.guardian_email, new_student, contract_path)
+                    MailService.send_welcome_email(new_student.guardian_email, student_dict, contract_path)
         except Exception as e:
-            # No bloqueamos el registro si falla el correo, pero lo logueamos
             from flask import current_app
             current_app.logger.error(f"Error en post-registro (PDF/Email): {str(e)}")
 

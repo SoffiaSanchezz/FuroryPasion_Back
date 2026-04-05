@@ -2,8 +2,9 @@
 from flask import current_app, jsonify
 from src.models.password_reset_tokens import PasswordResetToken
 import src.middleware.jwt as generate_token_module
-from src.models.User import User # Importamos el nuevo modelo User
-from src.database.db import db # Importamos la instancia de db
+from src.models.User import User
+from src.database.db import db
+from src.services.mail_service import MailService
 
 class AuthController:
     def __init__(self, mail_service=None):
@@ -30,7 +31,21 @@ class AuthController:
         
         db.session.add(new_user)
         db.session.commit()
-        return new_user.serialize() # Retornamos la versión serializada
+
+        # Enviar correo de bienvenida
+        try:
+            MailService.send_welcome_email(
+                recipient_email=email,
+                student_data={
+                    'full_name': f"{nombre} {apellido}",
+                    'email': email,
+                    'username': username
+                }
+            )
+        except Exception as e:
+            current_app.logger.error(f"Error enviando correo de bienvenida a {email}: {e}")
+
+        return new_user.serialize()
 
     def authenticate_user(self, identifier, password):
         # identifier puede ser email o username

@@ -1,115 +1,217 @@
-# furorypasion-back/templates/emails/activity_invitation.html
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invitación a Actividad</title>
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Bebas+Neue&family=Urbanist:wght@600&display=swap"
+        rel="stylesheet">
+
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
             margin: 0;
             padding: 0;
-            -webkit-text-size-adjust: 100%;
-            -ms-text-size-adjust: 100%;
+            background-color: #f4f4f7;
+            font-family: 'Urbanist', Arial, sans-serif;
+            color: #333;
         }
-        .email-container {
+
+        h1 {
+            font-family: 'Bebas Neue', 'Oswald', sans-serif;
+            letter-spacing: 1px;
+            font-size: 32px;
+            margin: 10px 0;
+        }
+
+        .container {
             max-width: 600px;
-            margin: 20px auto;
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin: 30px auto;
+            background: #ffffff;
+            border-radius: 12px;
             overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
         }
+
+        /* HEADER CON IMAGEN + OVERLAY */
         .header {
-            background-color: #B11226; /* Primary color */
-            color: #ffffff;
-            padding: 20px;
+            background: url('img/corregidofondoescuela2025.jpg') center/cover no-repeat;
+            color: white;
             text-align: center;
+            padding: 50px 20px;
+            position: relative;
         }
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
+
+        .overlay {
+            background: rgba(0, 0, 0, 0.5);
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
         }
-        .content {
+
+        /* EFECTO GLASS */
+        .glass {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
             padding: 20px;
-            color: #333333;
-            line-height: 1.6;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            display: inline-block;
         }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
         .content p {
-            margin: 0 0 10px;
+            margin-bottom: 15px;
         }
-        .activity-details {
-            background-color: #f9f9f9;
-            border-left: 5px solid #E3B23C; /* Accent color */
-            padding: 15px;
-            margin-bottom: 20px;
+
+        .activity-card {
+            background: #fff5f6;
+            border-left: 5px solid #B11226;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 25px 0;
+            font-family: 'Oswald', Arial, sans-serif;
         }
-        .activity-details h2 {
-            color: #B11226;
+
+        .activity-card h2 {
             margin-top: 0;
-            font-size: 20px;
+            color: #B11226;
+            font-family: 'Oswald', sans-serif;
         }
-        .activity-details ul {
+
+        .activity-card ul {
             list-style: none;
             padding: 0;
-            margin: 0;
+            margin: 10px 0 0;
         }
-        .activity-details ul li {
-            margin-bottom: 5px;
+
+        .activity-card li {
+            margin-bottom: 8px;
         }
+
         .activity-image {
+            margin: 20px 0;
             text-align: center;
-            margin-bottom: 20px;
         }
+
         .activity-image img {
             max-width: 100%;
-            height: auto;
-            border-radius: 4px;
+            border-radius: 10px;
         }
-        .footer {
-            background-color: #eeeeee;
-            color: #777777;
-            padding: 15px;
+
+        .button-container {
             text-align: center;
+            margin: 30px 0;
+        }
+
+        .button {
+            background: #B11226;
+            color: white !important;
+            padding: 14px 30px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            display: inline-block;
+            font-family: 'Oswald', Arial, sans-serif;
+        }
+
+        .divider {
+            height: 1px;
+            background: #eee;
+            margin: 25px 0;
+        }
+
+        .footer {
+            background: #fafafa;
+            text-align: center;
+            padding: 20px;
             font-size: 12px;
-            border-top: 1px solid #dddddd;
+            color: #888;
+            font-family: Arial, sans-serif;
+        }
+
+        strong {
+            font-weight: 700 !important;
+        }
+
+        @media (max-width: 600px) {
+            .content {
+                padding: 20px;
+            }
         }
     </style>
-</head>
-<body>
-    <div class="email-container">
-        <div class="header">
-            <h1>¡Estás invitado a una actividad!</h1>
-        </div>
-        <div class="content">
-            <p>Hola,</p>
-            <p>Te extendemos una cordial invitación a la siguiente actividad organizada por <strong>Furor y Pasión Escuela de Danza</strong>:</p>
 
-            <div class="activity-details">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- HEADER NUEVO -->
+        <div class="header">
+            <div class="overlay"></div>
+
+            <div class="header-content glass">
+                <h1>🎉 ¡Estás invitado!</h1>
+                <p>No te pierdas esta experiencia en Furor y Pasión</p>
+            </div>
+        </div>
+
+        <div class="content">
+
+            <p>Hola,</p>
+
+            <p>
+                Tenemos el gusto de invitarte a
+                <strong style="font-weight:700;">Furor y Pasión Escuela de Danza</strong>.
+            </p>
+
+            <div class="activity-card">
                 <h2>{{ activity.title }}</h2>
+
                 <ul>
-                    <li><strong>Fecha:</strong> {{ activity.eventDate }}</li>
-                    <li><strong>Hora:</strong> {{ activity.eventTime }}</li>
+                    <li>📅 <strong style="font-weight:700;">Fecha:</strong> {{ activity.eventDate }}</li>
+                    <li>⏰ <strong style="font-weight:700;">Hora:</strong> {{ activity.eventTime }}</li>
+
                     {% if activity.description %}
-                    <li><strong>Descripción:</strong> {{ activity.description }}</li>
+                    <li>📝 <strong style="font-weight:700;">Descripción:</strong> {{ activity.description }}</li>
                     {% endif %}
                 </ul>
             </div>
 
             {% if activity.imagePath %}
             <div class="activity-image">
-                <img src="{{ base_url }}/uploads/{{ activity.imagePath }}" alt="Imagen de la actividad" style="max-width: 100%; height: auto;">
+                <img src="{{ base_url }}/uploads/{{ activity.imagePath }}" alt="Imagen de la actividad">
             </div>
             {% endif %}
 
-            <p>Esperamos contar con tu presencia.</p>
-            <p>Saludos cordiales,</p>
-            <p>El equipo de Furor y Pasión</p>
+            <div class="button-container">
+                <a href="#" class="button">Confirmar asistencia</a>
+            </div>
+
+            <div class="divider"></div>
+
+            <p>Nos encantaría contar con tu presencia 💃🕺</p>
+
+            <p><strong style="font-weight:700;">¡Te esperamos!</strong></p>
+
         </div>
         <div class="footer">
-            <p>&copy; {{ current_year }} Furor y Pasión Escuela de Danza. Todos los derechos reservados.</p>
+            © {{ current_year }} Furor y Pasión Escuela de Danza<br>
+            Calle 10 N 3a – 42
         </div>
     </div>
 </body>
