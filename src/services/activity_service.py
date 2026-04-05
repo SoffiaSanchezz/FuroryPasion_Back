@@ -71,6 +71,14 @@ class ActivityService:
         db.session.add(new_activity)
         db.session.commit()
 
+        # Crear notificación automática
+        try:
+            from src.services.notification_service import NotificationService
+            NotificationService.notify_new_activity(user_id, new_activity)
+        except Exception as e:
+            from flask import current_app
+            current_app.logger.warning(f"No se pudo crear notificación de actividad: {e}")
+
         # Send invitations if there are recipients
         if new_activity.invited_emails:
             recipient_emails = json.loads(new_activity.invited_emails)
