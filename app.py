@@ -12,7 +12,14 @@ from src.routes.search import search_bp
 import os
 from src.services.mail_service import MailService
 
-ALLOWED_ORIGINS = ['http://localhost:4200', 'http://127.0.0.1:4200']
+ALLOWED_ORIGINS = [
+    'http://localhost:4200',
+    'http://127.0.0.1:4200',
+    'https://localhost',
+    'http://localhost',
+    'capacitor://localhost',
+    'ionic://localhost',
+]
 
 
 def _cors_headers(response, origin):
@@ -28,36 +35,8 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     
-    # Configuración global de CORS reforzada
-    allowed_origins = [
-        "http://localhost:4200",
-        "http://127.0.0.1:4200",
-        "https://localhost",
-        "http://localhost",
-        "capacitor://localhost",
-        "ionic://localhost",
-    ]
-
-    CORS(app, resources={r"/*": {
-        "origins": allowed_origins,
-        "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization", "x-access-token", "Accept"],
-        "expose_headers": ["Content-Type", "Authorization"],
-        "max_age": 3600
-    }}, supports_credentials=True)
-    
     MailService.init_app(app)
     db.init_app(app)
-    
-    @app.after_request
-    def add_cors_headers(response):
-        origin = request.headers.get('Origin')
-        if origin in allowed_origins:
-            response.headers['Access-Control-Allow-Origin'] = origin
-            response.headers['Access-Control-Allow-Credentials'] = 'true'
-            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, PATCH, OPTIONS'
-            response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, x-access-token, Accept'
-        return response
     
     # Registro de Blueprints con prefijos correctos
     app.register_blueprint(auth_bp, url_prefix='/auth')
