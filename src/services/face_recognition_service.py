@@ -5,9 +5,22 @@ import base64
 import io
 from PIL import Image
 from src.models.Student import Student
+from src.models.Schedule import Schedule
+from datetime import datetime, time
 
 
 TOLERANCE = 0.5  # Distancia máxima para considerar una coincidencia (menor = más estricto)
+
+# Días en español según weekday() de Python (0=Monday)
+DAYS_MAP = {
+    0: "Lunes",
+    1: "Martes",
+    2: "Miércoles",
+    3: "Jueves",
+    4: "Viernes",
+    5: "Sábado",
+    6: "Domingo",
+}
 
 
 class FaceRecognitionService:
@@ -91,3 +104,59 @@ class FaceRecognitionService:
 
         confidence = FaceRecognitionService._distance_to_percentage(best_distance)
         return best_match, confidence, None
+
+    @staticmethod
+    def identify_and_get_schedule(base64_image: str):
+        """
+        Identifica al estudiante por su rostro y retorna las clases
+        que tiene programadas en el momento actual (día y hora).
+        Retorna (student, confidence, schedules, error)
+        """
+        # 1. Identificar al estudiante
+        student, confidence, error = FaceRecognitionService.identify_student(base64_image)
+        if error:
+            return None, None, None, error
+
+        # 2. Obtener día y hora actual
+        now = datetime.now()
+        current_day = DAYS_MAP[now.weekday()]
+        current_time = now.strftime("%H:%M")
+
+        # 3. Buscar clases activas del día actual cuyo rango horario incluya la hora actual
+        schedules_today = Schedule.query.filter_by(
+            day=current_day,
+            status="activo"
+        ).all()
+
+        # Filtrar las que están en curso ahora mismo
+        current_schedules = []
+        for schedule in schedules_today:
+            try:
+                start = datetime.strptime(schedule.start_time, "%H:%M").time()
+                end = datetime.strptime(schedule.end_time, "%H:%M").time()
+                now_time = now.time().replace(second=0, microsecond=0)
+                if start <= now_time <= end:
+                    current_schedules.append(schedule)
+            except ValueError:
+                continue
+
+        # 4. Si no hay clases en curso, buscar la próxima clase del día
+        upcoming_schedules = []
+        if not current_schedules:
+            for schedule in schedules_today:
+                try:
+                    start = datetime.strptime(schedule.start_time, "%H:%M").time()
+                    now_time = now.time().replace(second=0, microsecond=0)
+                    if start > now_time:
+                        upcoming_schedules.append(schedule)
+                except ValueError:
+                    continue
+            # Ordenar por hora de inicio
+            upcoming_schedules.sort(key=lambda s: s.start_time)
+
+        return student, confidence, {
+            "current_time": current_time,
+            "current_day": current_day,
+            "in_progress": [s.serialize() for s in current_schedules],
+            "upcoming_today": [s.serialize() for s in upcoming_schedules[:3]],  # máximo 3 próximas
+        }, None

@@ -43,5 +43,13 @@ services:
     depends_on:
       - db
 
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: unless-stopped
+    command: tunnel --url http://backend:5000
+    depends_on:
+      - backend
+
 volumes:
   postgres_data:

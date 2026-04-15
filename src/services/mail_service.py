@@ -19,33 +19,39 @@ class MailService:
 
         try:
             with current_app.app_context():
+                current_app.logger.info(f"[Mail] Intentando enviar a {recipient_email}")
+                current_app.logger.info(f"[Mail] MAIL_SERVER={current_app.config.get('MAIL_SERVER')}")
+                current_app.logger.info(f"[Mail] MAIL_PORT={current_app.config.get('MAIL_PORT')}")
+                current_app.logger.info(f"[Mail] MAIL_USE_TLS={current_app.config.get('MAIL_USE_TLS')}")
+                current_app.logger.info(f"[Mail] MAIL_USERNAME={current_app.config.get('MAIL_USERNAME')}")
+                current_app.logger.info(f"[Mail] MAIL_DEFAULT_SENDER={current_app.config.get('MAIL_DEFAULT_SENDER')}")
+
                 msg = Message(
                     subject="¡Bienvenido a Furor y Pasión Escuela de Danza!",
                     sender=current_app.config['MAIL_DEFAULT_SENDER'],
                     recipients=[recipient_email]
                 )
-                
-                # Renderizar el cuerpo del correo (crearemos esta plantilla)
+
                 msg.html = render_template(
                     'emails/student_welcome.html',
                     student=student_data,
+                    base_url=current_app.config.get('BASE_URL', 'http://localhost:5000'),
                     current_year=datetime.utcnow().year
                 )
 
-                # Adjuntar el contrato PDF si existe
                 if contract_pdf_path and os.path.exists(contract_pdf_path):
-                    with current_app.open_resource(contract_pdf_path) as fp:
+                    with open(contract_pdf_path, 'rb') as fp:
                         msg.attach(
                             filename="Contrato_Afiliacion_Furor_y_Pasion.pdf",
                             content_type="application/pdf",
                             data=fp.read()
                         )
-                
+
                 mail.send(msg)
-                current_app.logger.info(f"Correo de bienvenida enviado a {recipient_email}")
+                current_app.logger.info(f"[Mail] Correo enviado exitosamente a {recipient_email}")
             return True
         except Exception as e:
-            current_app.logger.error(f"Error enviando correo de bienvenida: {e}", exc_info=True)
+            current_app.logger.error(f"[Mail] Error enviando correo a {recipient_email}: {e}", exc_info=True)
             return False
 
     @staticmethod
@@ -88,4 +94,42 @@ class MailService:
             return True
         except Exception as e:
             current_app.logger.error(f"Error sending invitation email: {e}", exc_info=True)
+            return False
+
+    @staticmethod
+    def send_payment_email(recipient_email, student, payment, installment=None, pdf_path=None):
+        """Envía un correo de confirmación de pago con el PDF adjunto."""
+        if not recipient_email:
+            current_app.logger.warning(f"[Mail] Sin email para enviar recibo de pago al estudiante {student.full_name}.")
+            return False
+
+        try:
+            with current_app.app_context():
+                msg = Message(
+                    subject="🧾 Confirmación de Pago - Furor y Pasión Escuela de Danza",
+                    sender=current_app.config['MAIL_DEFAULT_SENDER'],
+                    recipients=[recipient_email]
+                )
+
+                msg.html = render_template(
+                    'emails/payments.html',
+                    student=student,
+                    payment=payment.serialize(),
+                    installment=installment.serialize() if installment else None,
+                    current_year=datetime.utcnow().year
+                )
+
+                if pdf_path and os.path.exists(pdf_path):
+                    with open(pdf_path, 'rb') as fp:
+                        msg.attach(
+                            filename=f"Recibo_{payment.receipt_id}.pdf",
+                            content_type="application/pdf",
+                            data=fp.read()
+                        )
+
+                mail.send(msg)
+                current_app.logger.info(f"[Mail] Correo de pago enviado a {recipient_email}")
+            return True
+        except Exception as e:
+            current_app.logger.error(f"[Mail] Error enviando correo de pago a {recipient_email}: {e}", exc_info=True)
             return False
