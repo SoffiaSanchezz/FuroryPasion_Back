@@ -95,3 +95,41 @@ class MailService:
         except Exception as e:
             current_app.logger.error(f"Error sending invitation email: {e}", exc_info=True)
             return False
+
+    @staticmethod
+    def send_payment_email(recipient_email, student, payment, installment=None, pdf_path=None):
+        """Envía un correo de confirmación de pago con el PDF adjunto."""
+        if not recipient_email:
+            current_app.logger.warning(f"[Mail] Sin email para enviar recibo de pago al estudiante {student.full_name}.")
+            return False
+
+        try:
+            with current_app.app_context():
+                msg = Message(
+                    subject="🧾 Confirmación de Pago - Furor y Pasión Escuela de Danza",
+                    sender=current_app.config['MAIL_DEFAULT_SENDER'],
+                    recipients=[recipient_email]
+                )
+
+                msg.html = render_template(
+                    'emails/payments.html',
+                    student=student,
+                    payment=payment.serialize(),
+                    installment=installment.serialize() if installment else None,
+                    current_year=datetime.utcnow().year
+                )
+
+                if pdf_path and os.path.exists(pdf_path):
+                    with open(pdf_path, 'rb') as fp:
+                        msg.attach(
+                            filename=f"Recibo_{payment.receipt_id}.pdf",
+                            content_type="application/pdf",
+                            data=fp.read()
+                        )
+
+                mail.send(msg)
+                current_app.logger.info(f"[Mail] Correo de pago enviado a {recipient_email}")
+            return True
+        except Exception as e:
+            current_app.logger.error(f"[Mail] Error enviando correo de pago a {recipient_email}: {e}", exc_info=True)
+            return False

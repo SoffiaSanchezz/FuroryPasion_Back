@@ -114,6 +114,22 @@ class PaymentService:
             from flask import current_app
             current_app.logger.warning(f"No se pudo crear notificación de pago: {e}")
 
+        # Enviar correo de confirmación con PDF adjunto
+        try:
+            from flask import current_app
+            from src.services.mail_service import MailService
+            from src.services.payment_receipt_service import PaymentReceiptService
+
+            recipient = student.email or (student.guardian_email if student.is_minor else None)
+            if recipient:
+                pdf_path = PaymentReceiptService.generate_receipt(new_payment, first_installment)
+                MailService.send_payment_email(recipient, student, new_payment, first_installment, pdf_path)
+            else:
+                current_app.logger.warning(f"[Mail] Estudiante {student.full_name} no tiene email registrado.")
+        except Exception as e:
+            from flask import current_app
+            current_app.logger.warning(f"[Mail] No se pudo enviar correo de pago: {e}")
+
         return new_payment, None
 
     @staticmethod
@@ -150,6 +166,24 @@ class PaymentService:
         payment.amount_paid = sum(inst.amount for inst in payment.installments)
         
         db.session.commit()
+
+        # Enviar correo de confirmación del abono con PDF adjunto
+        try:
+            from flask import current_app
+            from src.services.mail_service import MailService
+            from src.services.payment_receipt_service import PaymentReceiptService
+
+            student = payment.student
+            recipient = student.email or (student.guardian_email if student.is_minor else None)
+            if recipient:
+                pdf_path = PaymentReceiptService.generate_receipt(payment, new_installment)
+                MailService.send_payment_email(recipient, student, payment, new_installment, pdf_path)
+            else:
+                current_app.logger.warning(f"[Mail] Estudiante {student.full_name} no tiene email registrado.")
+        except Exception as e:
+            from flask import current_app
+            current_app.logger.warning(f"[Mail] No se pudo enviar correo de abono: {e}")
+
         return payment, None
 
     @staticmethod

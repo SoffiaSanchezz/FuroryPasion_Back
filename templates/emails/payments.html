@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f4f4f7;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 30px auto;
+            background: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(135deg, #B11226, #7A0C1A);
+            color: white;
+            text-align: center;
+            padding: 50px 20px;
+            position: relative;
+        }
+
+        .overlay {
+            background: rgba(0, 0, 0, 0.4);
+            position: absolute;
+            inset: 0;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 20px;
+            display: inline-block;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 30px;
+            letter-spacing: 1px;
+        }
+
+        .header p {
+            margin-top: 10px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* CONTENT */
+        .content {
+            padding: 30px;
+        }
+
+        .content p {
+            margin-bottom: 15px;
+            color: #444;
+        }
+
+        /* CARDS */
+        .activity-card {
+            background: #fafafa;
+            border-left: 6px solid #B11226;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 25px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .activity-card h2 {
+            margin: 0 0 15px;
+            color: #B11226;
+            font-size: 18px;
+        }
+
+        /* LISTA ESTILO FACTURA */
+        .activity-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .activity-card li {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed #ddd;
+            font-size: 14px;
+        }
+
+        .activity-card li:last-child {
+            border-bottom: none;
+        }
+
+        .activity-card strong {
+            color: #333;
+        }
+
+        /* DESTACADO */
+        .highlight {
+            background: #fff5f6;
+            border: 1px solid #ffd6db;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            text-align: right;
+            font-weight: bold;
+            color: #B11226;
+        }
+
+        /* DIVIDER */
+        .divider {
+            height: 1px;
+            background: #eee;
+            margin: 25px 0;
+        }
+
+        /* FOOTER */
+        .footer {
+            background: #fafafa;
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 600px) {
+            .content {
+                padding: 20px;
+            }
+
+            .activity-card li {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- HEADER -->
+        <div class="header">
+            <div class="overlay"></div>
+
+            <div class="header-content glass">
+                <h1>🧾 Factura de Pago</h1>
+                <p>Furor y Pasión Escuela de Danza</p>
+            </div>
+        </div>
+
+        <div class="content">
+
+            <p>Hola <strong>{{ student.full_name }}</strong>,</p>
+
+            <p>
+                Hemos registrado tu pago correctamente. A continuación encontrarás el detalle de tu factura:
+            </p>
+
+            <!-- INFO PAGO -->
+            <div class="activity-card">
+                <h2>📌 Información del Pago</h2>
+
+                <ul>
+                    <li><span>Recibo</span> <strong>{{ payment.receiptId }}</strong></li>
+                    <li><span>Plan</span> <strong>{{ payment.planAcquired }}</strong></li>
+                    <li><span>Valor total</span> <strong>${{ payment.totalValue }}</strong></li>
+                    <li><span>Total pagado</span> <strong>${{ payment.amountPaid }}</strong></li>
+                    <li><span>Saldo pendiente</span> <strong>${{ payment.pendingBalance }}</strong></li>
+                    <li><span>Método de pago</span> <strong>{{ payment.paymentMethod }}</strong></li>
+                    <li><span>Estado</span> <strong>{{ payment.status }}</strong></li>
+                    <li><span>Vigencia</span> <strong>{{ payment.planStatus }}</strong></li>
+                    <li><span>Inicio</span> <strong>{{ payment.startDate }}</strong></li>
+                    <li><span>Fin</span> <strong>{{ payment.endDate }}</strong></li>
+                </ul>
+
+                <div class="highlight">
+                    TOTAL PAGADO: ${{ payment.amountPaid }}
+                </div>
+            </div>
+
+            <!-- ABONO -->
+            {% if installment %}
+            <div class="activity-card">
+                <h2>💰 Detalle del Abono</h2>
+
+                <ul>
+                    <li><span>Monto</span> <strong>${{ installment.amount }}</strong></li>
+                    <li><span>Fecha</span> <strong>{{ installment.date }}</strong></li>
+                    <li><span>Notas</span> <strong>{{ installment.notes }}</strong></li>
+                </ul>
+            </div>
+            {% endif %}
+
+            <div class="divider"></div>
+
+            <p>
+                📎 Puedes encontrar tu factura en formato PDF adjunta a este correo.
+            </p>
+
+            <p>
+                Si tienes alguna duda, no dudes en contactarnos.
+            </p>
+
+            <p style="color:#B11226;">
+                <strong>Gracias por confiar en nosotros 💃</strong>
+            </p>
+
+        </div>
+
+        <div class="footer">
+            © {{ current_year }} Furor y Pasión Escuela de Danza <br>
+            Calle 10 N 3a – 42
+        </div>
+
+    </div>
+
+</body>
+
+</html>
