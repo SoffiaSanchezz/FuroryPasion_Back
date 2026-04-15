@@ -1,6 +1,12 @@
 from datetime import datetime
 from src.database.db import db
 
+# Association table for Student and Schedule many-to-many relationship
+student_schedules = db.Table('student_schedules',
+    db.Column('student_id', db.Integer, db.ForeignKey('students.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('schedule_id', db.Integer, db.ForeignKey('schedules.id', ondelete='CASCADE'), primary_key=True)
+)
+
 class Student(db.Model):
     __tablename__ = 'students'
 
@@ -18,6 +24,7 @@ class Student(db.Model):
     signature_path = db.Column(db.String(255), nullable=True) # Ruta de la firma digital
     face_descriptor = db.Column(db.Text, nullable=True) # Almacena el descriptor facial (array JSON)
     is_minor = db.Column(db.Boolean, default=False, nullable=False) # Para indicar si es menor de edad
+    allowed_all_classes = db.Column(db.Boolean, default=False, nullable=False) # Para indicar si puede asistir a cualquier clase
     
     # Datos del acudiente (si aplica)
     guardian_full_name = db.Column(db.String(200), nullable=True)
@@ -31,6 +38,7 @@ class Student(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     user = db.relationship('User', backref='students', lazy=True)
+    allowed_schedules = db.relationship('Schedule', secondary=student_schedules, backref=db.backref('students_allowed', lazy='dynamic'))
 
     def __repr__(self):
         return f'<Student {self.full_name} ({self.document_id})>'
@@ -49,6 +57,8 @@ class Student(db.Model):
             "signature_path": self.signature_path,
             "face_descriptor": self.face_descriptor,
             "is_minor": self.is_minor,
+            "allowed_all_classes": self.allowed_all_classes,
+            "allowed_schedule_ids": [str(s.id) for s in self.allowed_schedules],
             "status": self.status,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat()

@@ -84,3 +84,11 @@ def toggle_student_status_route(student_id):
     if request.method == 'OPTIONS':
         return _cors_preflight()
     return StudentController.toggle_student_status(student_id)
+
+
+@student_bp.route('/students/<int:student_id>/schedules', methods=['PUT', 'OPTIONS'])
+@jwt_required
+def update_student_schedules_route(student_id):
+    if request.method == 'OPTIONS':
+        return _cors_preflight()
+    return StudentController.update_schedules(student_id)

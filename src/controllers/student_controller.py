@@ -177,6 +177,17 @@ class StudentController:
         return jsonify({"message": "Estudiante eliminado exitosamente."}), 200
 
     @staticmethod
+    def update_schedules(student_id):
+        user_id = g.current_user_id
+        data = request.get_json()
+        
+        student, errors = StudentService.update_student_schedules(user_id, student_id, data)
+        if errors:
+            return jsonify({"error": errors.get('general')}), 404
+            
+        return jsonify(student.serialize()), 200
+
+    @staticmethod
     def verify_photo():
         """
         POST /students/verify-photo

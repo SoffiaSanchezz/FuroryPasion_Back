@@ -298,6 +298,28 @@ class StudentService:
         return True, None
 
     @staticmethod
+    def update_student_schedules(user_id, student_id, data):
+        student = Student.query.filter_by(user_id=user_id, id=student_id).first()
+        if not student:
+            return None, {"general": "Estudiante no encontrado"}
+        
+        allowed_all_classes = data.get('allowed_all_classes', False)
+        schedule_ids = data.get('schedule_ids', [])
+        
+        student.allowed_all_classes = allowed_all_classes
+        
+        # Actualizar relaciones many-to-many
+        if not allowed_all_classes:
+            from src.models.Schedule import Schedule
+            schedules = Schedule.query.filter(Schedule.id.in_(schedule_ids)).all()
+            student.allowed_schedules = schedules
+        else:
+            student.allowed_schedules = [] # Limpiar si tiene acceso a todas
+            
+        db.session.commit()
+        return student, None
+
+    @staticmethod
     def get_student_photo_url(student):
         if student and student.photo_path:
             return FileUploadHelper.get_photo_url(student.photo_path)
