@@ -237,6 +237,7 @@ def _generate_adult_contract(student_data, signature_path: str) -> str:
     _add_content_sections(pdf, W)
 
     # ── Firma única: estudiante ──
+    pdf.ln(25)
     sig_y = pdf.get_y()
     pdf.cell(W, 10, "__________________________________", 0, 1, 'C')
     pdf.cell(W, 6, _safe("Firma del Estudiante"), 0, 1, 'C')
@@ -305,6 +306,7 @@ def _generate_minor_contract(student_data, signature_path: str,
     _add_content_sections(pdf, W)
 
     # ── Dos firmas: acudiente | estudiante ──
+    pdf.ln(25)
     sig_y = pdf.get_y()
 
     pdf.cell(80, 10, "__________________________________", 0, 0, 'C')
