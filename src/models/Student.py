@@ -21,7 +21,8 @@ class Student(db.Model):
     phone = db.Column(db.String(50), nullable=False)
     address = db.Column(db.String(255), nullable=False)
     photo_path = db.Column(db.String(255), nullable=True) # Ruta de la foto del estudiante
-    signature_path = db.Column(db.String(255), nullable=True) # Ruta de la firma digital
+    signature_path = db.Column(db.String(255), nullable=True) # Ruta de la firma digital del estudiante
+    guardian_signature_path = db.Column(db.String(255), nullable=True) # Ruta de la firma digital del acudiente
     face_descriptor = db.Column(db.Text, nullable=True) # Almacena el descriptor facial (array JSON)
     is_minor = db.Column(db.Boolean, default=False, nullable=False) # Para indicar si es menor de edad
     allowed_all_classes = db.Column(db.Boolean, default=False, nullable=False) # Para indicar si puede asistir a cualquier clase

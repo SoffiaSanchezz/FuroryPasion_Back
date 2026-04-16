@@ -325,9 +325,17 @@ class ContractService:
         - Mayor de edad (is_minor=False): contrato con C.C. y firma del estudiante.
         - Menor de edad (is_minor=True):  contrato con T.I., firma del acudiente
           y firma del estudiante.
+
+        Si guardian_signature_path no se pasa, intenta usar student_data.guardian_signature_path.
         """
+        # Resolver firma del estudiante: parámetro > campo del modelo
+        resolved_signature = signature_path or getattr(student_data, 'signature_path', None)
+
+        # Resolver firma del acudiente: parámetro > campo del modelo
+        resolved_guardian_signature = guardian_signature_path or getattr(student_data, 'guardian_signature_path', None)
+
         if student_data.is_minor:
-            return _generate_minor_contract(student_data, signature_path,
-                                            guardian_signature_path)
+            return _generate_minor_contract(student_data, resolved_signature,
+                                            resolved_guardian_signature)
         else:
-            return _generate_adult_contract(student_data, signature_path)
+            return _generate_adult_contract(student_data, resolved_signature)

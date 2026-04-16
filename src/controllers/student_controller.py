@@ -28,12 +28,22 @@ class StudentController:
             except Exception:
                 pass 
 
-        # 2. Procesar Firma Base64
+        # 2. Procesar Firma del Estudiante Base64
         if 'signature_image_base64' in raw_data and raw_data['signature_image_base64']:
             try:
                 base64_string = raw_data['signature_image_base64'].split(',')[1]
                 sig_data = base64.b64decode(base64_string)
                 signature_file = FileStorage(io.BytesIO(sig_data), filename='signature.png', content_type='image/png')
+            except Exception:
+                pass
+
+        # 2b. Procesar Firma del Acudiente Base64 (solo para menores)
+        guardian_signature_file = None
+        if 'guardian_signature_image_base64' in raw_data and raw_data['guardian_signature_image_base64']:
+            try:
+                base64_string = raw_data['guardian_signature_image_base64'].split(',')[1]
+                gsig_data = base64.b64decode(base64_string)
+                guardian_signature_file = FileStorage(io.BytesIO(gsig_data), filename='guardian_signature.png', content_type='image/png')
             except Exception:
                 pass
 
@@ -61,7 +71,7 @@ class StudentController:
             if descriptor:
                 data['face_descriptor'] = descriptor  # lista de 128 floats
 
-        return data, photo_file, signature_file
+        return data, photo_file, signature_file, guardian_signature_file
 
     @staticmethod
     def get_regulation():
@@ -79,7 +89,7 @@ class StudentController:
 
     @staticmethod
     def create_student():
-        data, photo_file, signature_file = StudentController._process_incoming_data()
+        data, photo_file, signature_file, guardian_signature_file = StudentController._process_incoming_data()
         user_id = g.current_user_id 
 
         # Validación Senior: Evitar procesar si falta biometría
@@ -89,7 +99,7 @@ class StudentController:
             }), 400
 
         try:
-            student, errors = StudentService.create_student(user_id, data, photo_file, signature_file)
+            student, errors = StudentService.create_student(user_id, data, photo_file, signature_file, guardian_signature_file)
 
             if errors:
                 return jsonify({"errors": errors}), 400
@@ -138,9 +148,9 @@ class StudentController:
     @staticmethod
     def update_student(student_id):
         user_id = g.current_user_id
-        data, photo_file, signature_file = StudentController._process_incoming_data() # Use unified processing
+        data, photo_file, signature_file, guardian_signature_file = StudentController._process_incoming_data()
 
-        student, errors = StudentService.update_student(user_id, student_id, data, photo_file, signature_file) # Pass signature_file
+        student, errors = StudentService.update_student(user_id, student_id, data, photo_file, signature_file, guardian_signature_file)
 
         if errors:
             if 'general' in errors:

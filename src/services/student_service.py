@@ -103,7 +103,7 @@ class StudentService:
         return errors, data
 
     @staticmethod
-    def create_student(user_id, data, photo_file=None, signature_file=None):
+    def create_student(user_id, data, photo_file=None, signature_file=None, guardian_signature_file=None):
         errors, validated_data = StudentService._validate_student_data(data, is_new_student=True)
         
         # 1. Normalización y Validación Preventiva de Unicidad (Email y Documento)
@@ -130,12 +130,19 @@ class StudentService:
             if upload_error:
                 return None, {'photo': upload_error}
         
-        # Guardar la firma si se proporciona
+        # Guardar la firma del estudiante si se proporciona
         signature_path = None
         if signature_file:
             signature_path, upload_error = FileUploadHelper.save_photo(signature_file, "student_signatures")
             if upload_error:
                 return None, {'signature': upload_error}
+
+        # Guardar la firma del acudiente si se proporciona (solo menores)
+        guardian_signature_path = None
+        if guardian_signature_file and validated_data.get('is_minor'):
+            guardian_signature_path, upload_error = FileUploadHelper.save_photo(guardian_signature_file, "student_signatures")
+            if upload_error:
+                return None, {'guardian_signature': upload_error}
 
         new_student = Student(
             user_id=user_id,
@@ -170,7 +177,11 @@ class StudentService:
 
         # --- Flujo de Correo y Contrato ---
         try:
-            contract_path = ContractService.generate_student_contract(new_student, signature_path)
+            contract_path = ContractService.generate_student_contract(
+                new_student,
+                signature_path,
+                guardian_signature_path
+            )
 
             student_dict = {
                 'full_name': new_student.full_name,
@@ -203,7 +214,7 @@ class StudentService:
         return student
 
     @staticmethod
-    def update_student(user_id, student_id, data, photo_file=None, signature_file=None):
+    def update_student(user_id, student_id, data, photo_file=None, signature_file=None, guardian_signature_file=None):
         student = StudentService.get_student_by_id(user_id, student_id)
         if not student:
             return None, {'general': 'Estudiante no encontrado o no autorizado.'}
@@ -214,23 +225,31 @@ class StudentService:
 
         # Actualizar la foto si se proporciona una nueva
         if photo_file:
-            photo_path, upload_error = FileUploadHelper.save_photo(photo_file, "student_photos") # Specify folder
+            photo_path, upload_error = FileUploadHelper.save_photo(photo_file, "student_photos")
             if upload_error:
                 errors['photo'] = upload_error
                 return None, errors
             student.photo_path = photo_path
-        elif 'photo_path' in data: # Permitir borrar la foto si se envía photo_path: null
+        elif 'photo_path' in data:
             student.photo_path = validated_data.get('photo_path')
         
-        # Actualizar la firma si se proporciona una nueva
+        # Actualizar la firma del estudiante si se proporciona una nueva
         if signature_file:
-            signature_path, upload_error = FileUploadHelper.save_photo(signature_file, "student_signatures") # Specify folder
+            signature_path, upload_error = FileUploadHelper.save_photo(signature_file, "student_signatures")
             if upload_error:
                 errors['signature'] = upload_error
                 return None, errors
             student.signature_path = signature_path
-        elif 'signature_path' in data: # Permitir borrar la firma si se envía signature_path: null
+        elif 'signature_path' in data:
             student.signature_path = validated_data.get('signature_path')
+
+        # Actualizar la firma del acudiente si se proporciona (solo menores)
+        if guardian_signature_file and student.is_minor:
+            guardian_sig_path, upload_error = FileUploadHelper.save_photo(guardian_signature_file, "student_signatures")
+            if upload_error:
+                errors['guardian_signature'] = upload_error
+                return None, errors
+            student.guardian_signature_path = guardian_sig_path
 
         if 'face_descriptor' in validated_data:
             student.face_descriptor = validated_data.get('face_descriptor')

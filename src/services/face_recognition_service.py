@@ -7,6 +7,9 @@ from PIL import Image
 from src.models.Student import Student
 from src.models.Schedule import Schedule
 from datetime import datetime, time
+import pytz
+
+TIMEZONE = pytz.timezone("America/Bogota")
 
 
 TOLERANCE = 0.5  # Distancia máxima para considerar una coincidencia (menor = más estricto)
@@ -117,8 +120,8 @@ class FaceRecognitionService:
         if error:
             return None, None, None, error
 
-        # 2. Obtener día y hora actual
-        now = datetime.now()
+        # 2. Obtener día y hora actual en zona horaria de Colombia
+        now = datetime.now(TIMEZONE)
         current_day = DAYS_MAP[now.weekday()]
         current_time = now.strftime("%H:%M")
 
