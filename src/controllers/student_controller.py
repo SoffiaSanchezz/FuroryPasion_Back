@@ -240,3 +240,40 @@ class StudentController:
         from src.models.Student import Student
         exists = Student.query.filter_by(document_id=document_id).first() is not None
         return jsonify({"exists": exists}), 200
+
+    @staticmethod
+    def resend_welcome_email(student_id):
+        """
+        POST /students/<id>/resend-welcome
+        Regenera el contrato PDF y reenvía el correo de bienvenida al estudiante.
+        """
+        from src.services.contract_service import ContractService
+        from src.services.mail_service import MailService
+        from src.models.Student import Student
+
+        student = Student.query.get(student_id)
+        if not student:
+            return jsonify({"error": "Estudiante no encontrado."}), 404
+
+        try:
+            contract_path = ContractService.generate_student_contract(student, None, None)
+
+            target_email = student.email or student.guardian_email
+            if not target_email:
+                return jsonify({"error": "El estudiante no tiene email registrado."}), 400
+
+            student_dict = {
+                'full_name': student.full_name,
+                'email': student.email,
+                'document_id': student.document_id,
+            }
+
+            MailService.send_welcome_email(target_email, student_dict, contract_path)
+
+            return jsonify({
+                "message": f"Correo reenviado a {target_email}",
+                "contract_path": contract_path
+            }), 200
+
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500

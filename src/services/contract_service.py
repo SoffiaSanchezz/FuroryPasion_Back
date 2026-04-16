@@ -239,11 +239,13 @@ def _generate_adult_contract(student_data, signature_path: str) -> str:
     # ── Firma única: estudiante ──
     pdf.ln(25)
     sig_y = pdf.get_y()
-    pdf.cell(W, 10, "__________________________________", 0, 1, 'C')
-    pdf.cell(W, 6, _safe("Firma del Estudiante"), 0, 1, 'C')
 
     line_x = pdf.l_margin + (W / 2) - 25
-    _add_signature_image(pdf, signature_path, x=line_x, y=sig_y + 2, w=50, h=14)
+    _add_signature_image(pdf, signature_path, x=line_x, y=sig_y, w=50, h=14)
+
+    pdf.ln(14)
+    pdf.cell(W, 6, "__________________________________", 0, 1, 'C')
+    pdf.cell(W, 6, _safe("Firma del Estudiante"), 0, 1, 'C')
 
     return _save_pdf(pdf, student_data.document_id)
 
@@ -309,19 +311,19 @@ def _generate_minor_contract(student_data, signature_path: str,
     pdf.ln(25)
     sig_y = pdf.get_y()
 
-    pdf.cell(80, 10, "__________________________________", 0, 0, 'C')
+    _add_signature_image(pdf, guardian_signature_path,
+                         x=pdf.l_margin + 15, y=sig_y, w=50, h=14)
+    _add_signature_image(pdf, signature_path,
+                         x=pdf.l_margin + 105, y=sig_y, w=50, h=14)
+
+    pdf.ln(14)
+    pdf.cell(80, 6, "__________________________________", 0, 0, 'C')
     pdf.cell(10)
-    pdf.cell(80, 10, "__________________________________", 0, 1, 'C')
+    pdf.cell(80, 6, "__________________________________", 0, 1, 'C')
 
     pdf.cell(80, 6, _safe("Firma del Acudiente"), 0, 0, 'C')
     pdf.cell(10)
     pdf.cell(80, 6, _safe("Firma del Estudiante"), 0, 1, 'C')
-
-    _add_signature_image(pdf, guardian_signature_path,
-                         x=pdf.l_margin + 15, y=sig_y + 2, w=50, h=14)
-
-    _add_signature_image(pdf, signature_path,
-                         x=pdf.l_margin + 105, y=sig_y + 2, w=50, h=14)
 
     return _save_pdf(pdf, student_data.document_id)
 

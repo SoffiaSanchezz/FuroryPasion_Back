@@ -92,3 +92,12 @@ def update_student_schedules_route(student_id):
     if request.method == 'OPTIONS':
         return _cors_preflight()
     return StudentController.update_schedules(student_id)
+
+
+@student_bp.route('/students/<int:student_id>/resend-welcome', methods=['POST', 'OPTIONS'])
+@jwt_required
+def resend_welcome_email_route(student_id):
+    """Regenera el contrato y reenvía el correo de bienvenida. Solo para pruebas/debug."""
+    if request.method == 'OPTIONS':
+        return _cors_preflight()
+    return StudentController.resend_welcome_email(student_id)
