@@ -154,6 +154,7 @@ class StudentService:
             address=validated_data['address'],
             photo_path=photo_path,
             signature_path=signature_path,
+            guardian_signature_path=guardian_signature_path,
             face_descriptor=validated_data.get('face_descriptor'),
             is_minor=validated_data['is_minor'],
             # Datos de acudiente

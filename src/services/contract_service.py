@@ -143,12 +143,26 @@ def _save_pdf(pdf: FPDF, document_id: str) -> str:
 
 def _add_signature_image(pdf: FPDF, signature_path: str, x: float, y: float,
                           w: float = 50, h: float = 20):
-    """Inserta la imagen de firma si existe y es válida."""
-    if signature_path and os.path.exists(signature_path):
+    """
+    Inserta la imagen de firma si existe y es válida.
+    Acepta tanto rutas absolutas como relativas (relativas a uploads/).
+    """
+    if not signature_path:
+        return
+
+    # Si no es ruta absoluta, construirla desde la carpeta uploads de la app
+    if not os.path.isabs(signature_path):
+        abs_path = os.path.join(current_app.root_path, 'uploads', signature_path)
+    else:
+        abs_path = signature_path
+
+    if os.path.exists(abs_path):
         try:
-            pdf.image(signature_path, x=x, y=y, w=w, h=h)
-        except Exception:
-            pass
+            pdf.image(abs_path, x=x, y=y, w=w, h=h)
+        except Exception as e:
+            current_app.logger.warning(f"[Contract] No se pudo insertar firma '{abs_path}': {e}")
+    else:
+        current_app.logger.warning(f"[Contract] Firma no encontrada en: {abs_path}")
 
 
 def _field_row(pdf: FPDF, left_label: str, left_value: str,
@@ -227,9 +241,8 @@ def _generate_adult_contract(student_data, signature_path: str) -> str:
     pdf.cell(W, 10, "__________________________________", 0, 1, 'C')
     pdf.cell(W, 6, _safe("Firma del Estudiante"), 0, 1, 'C')
 
-    if signature_path and os.path.exists(signature_path):
-        line_x = pdf.l_margin + (W / 2) - 25
-        _add_signature_image(pdf, signature_path, x=line_x, y=sig_y - 5, w=50, h=18)
+    line_x = pdf.l_margin + (W / 2) - 25
+    _add_signature_image(pdf, signature_path, x=line_x, y=sig_y - 5, w=50, h=18)
 
     return _save_pdf(pdf, student_data.document_id)
 
@@ -302,13 +315,11 @@ def _generate_minor_contract(student_data, signature_path: str,
     pdf.cell(10)
     pdf.cell(80, 6, _safe("Firma del Estudiante"), 0, 1, 'C')
 
-    if guardian_signature_path and os.path.exists(guardian_signature_path):
-        _add_signature_image(pdf, guardian_signature_path,
-                             x=pdf.l_margin + 15, y=sig_y - 5, w=50, h=18)
+    _add_signature_image(pdf, guardian_signature_path,
+                         x=pdf.l_margin + 15, y=sig_y - 5, w=50, h=18)
 
-    if signature_path and os.path.exists(signature_path):
-        _add_signature_image(pdf, signature_path,
-                             x=pdf.l_margin + 105, y=sig_y - 5, w=50, h=18)
+    _add_signature_image(pdf, signature_path,
+                         x=pdf.l_margin + 105, y=sig_y - 5, w=50, h=18)
 
     return _save_pdf(pdf, student_data.document_id)
 
