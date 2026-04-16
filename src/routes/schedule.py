@@ -64,8 +64,9 @@ def delete_schedule_route(schedule_id):
 # ── Attendance ───────────────────────────────────────────────────────────────
 
 @schedule_bp.route('/attendance', methods=['POST', 'OPTIONS'])
-@jwt_required
 def record_attendance_route():
+    # Sin @jwt_required: este endpoint es llamado desde el flujo de
+    # reconocimiento facial (quiosco/tablet sin sesión de usuario).
     if request.method == 'OPTIONS':
         return _cors_preflight()
     return AttendanceController.record_attendance()

@@ -140,19 +140,18 @@ class FaceRecognitionService:
             except ValueError:
                 continue
 
-        # 4. Si no hay clases en curso, buscar la próxima clase del día
+        # 4. Buscar próximas clases del día (las que aún no han comenzado)
         upcoming_schedules = []
-        if not current_schedules:
-            for schedule in schedules_today:
-                try:
-                    start = datetime.strptime(schedule.start_time, "%H:%M").time()
-                    now_time = now.time().replace(second=0, microsecond=0)
-                    if start > now_time:
-                        upcoming_schedules.append(schedule)
-                except ValueError:
-                    continue
-            # Ordenar por hora de inicio
-            upcoming_schedules.sort(key=lambda s: s.start_time)
+        for schedule in schedules_today:
+            try:
+                start = datetime.strptime(schedule.start_time, "%H:%M").time()
+                now_time = now.time().replace(second=0, microsecond=0)
+                if start > now_time:
+                    upcoming_schedules.append(schedule)
+            except ValueError:
+                continue
+        # Ordenar por hora de inicio
+        upcoming_schedules.sort(key=lambda s: s.start_time)
 
         return student, confidence, {
             "current_time": current_time,
