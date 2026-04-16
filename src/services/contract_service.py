@@ -242,7 +242,7 @@ def _generate_adult_contract(student_data, signature_path: str) -> str:
     pdf.cell(W, 6, _safe("Firma del Estudiante"), 0, 1, 'C')
 
     line_x = pdf.l_margin + (W / 2) - 25
-    _add_signature_image(pdf, signature_path, x=line_x, y=sig_y - 5, w=50, h=18)
+    _add_signature_image(pdf, signature_path, x=line_x, y=sig_y + 2, w=50, h=14)
 
     return _save_pdf(pdf, student_data.document_id)
 
@@ -316,10 +316,10 @@ def _generate_minor_contract(student_data, signature_path: str,
     pdf.cell(80, 6, _safe("Firma del Estudiante"), 0, 1, 'C')
 
     _add_signature_image(pdf, guardian_signature_path,
-                         x=pdf.l_margin + 15, y=sig_y - 5, w=50, h=18)
+                         x=pdf.l_margin + 15, y=sig_y + 2, w=50, h=14)
 
     _add_signature_image(pdf, signature_path,
-                         x=pdf.l_margin + 105, y=sig_y - 5, w=50, h=18)
+                         x=pdf.l_margin + 105, y=sig_y + 2, w=50, h=14)
 
     return _save_pdf(pdf, student_data.document_id)
 
